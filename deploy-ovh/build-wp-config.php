@@ -9,9 +9,9 @@ if ( $password === false || $password === '' ) {
 	exit( 1 );
 }
 
-$template = file_get_contents( __DIR__ . '/wp-config.php' );
+$template = file_get_contents( __DIR__ . '/wp-config.template.php' );
 if ( $template === false ) {
-	fwrite( STDERR, "Template wp-config introuvable.\n" );
+	fwrite( STDERR, "Template wp-config.template.php introuvable.\n" );
 	exit( 1 );
 }
 
