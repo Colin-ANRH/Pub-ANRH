@@ -1,0 +1,360 @@
+/**
+ * Méga-menu catalogue — moderne, animations, survol sans décalage
+ */
+
+.site-nav .menu-item--mega {
+  position: static;
+}
+
+/* Zone de survol header → méga (évite la fermeture entre lien et panneau) */
+.mega-menu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 12px;
+}
+
+.mega-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 220;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate3d(0, 8px, 0);
+  transition:
+    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.28s;
+}
+
+.menu-item--mega:hover > .mega-menu,
+.menu-item--mega.is-open > .mega-menu,
+.menu-item--mega:focus-within > .mega-menu,
+.site-header.is-mega-open .menu-item--mega > .mega-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Panneau ouvert : colonnes toujours visibles (évite disparition post-animation) */
+.menu-item--mega:hover > .mega-menu .mega-menu__col,
+.menu-item--mega.is-open > .mega-menu .mega-menu__col,
+.menu-item--mega:focus-within > .mega-menu .mega-menu__col,
+.site-header.is-mega-open .menu-item--mega .mega-menu__col {
+  opacity: 1;
+}
+
+.mega-menu__shell {
+  width: var(--container);
+  max-width: calc(100% - 2rem);
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-orange);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow:
+    0 4px 6px rgba(87, 54, 86, 0.04),
+    0 20px 48px rgba(87, 54, 86, 0.12);
+}
+
+/* Toolbar */
+.mega-menu__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(90deg, var(--color-lilas) 0%, var(--color-surface) 100%);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mega-menu__intro {
+  min-width: 0;
+}
+
+.mega-menu__kicker {
+  display: block;
+  margin: 0 0 0.2rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+.mega-menu__headline {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.mega-menu__headline-main {
+  font-family: var(--font-title);
+  font-weight: 700;
+  color: var(--color-prune);
+}
+
+.mega-menu__headline-accent {
+  font-family: var(--font-accent);
+  font-weight: 900;
+  font-style: italic;
+  color: var(--color-prune);
+  margin-left: 0.2em;
+}
+
+.mega-menu__catalogue-link {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  border-width: 2px;
+  box-shadow: none;
+}
+
+.mega-menu__catalogue-link:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Grille — colonnes stables */
+.mega-menu__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  max-height: min(68vh, 460px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+  background: var(--color-surface);
+  scrollbar-gutter: stable;
+}
+
+.mega-menu__col {
+  padding: 0.65rem 0.85rem 0.85rem;
+  border-right: 1px solid var(--color-border);
+  min-width: 0;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.menu-item--mega:hover > .mega-menu .mega-menu__col,
+.menu-item--mega.is-open > .mega-menu .mega-menu__col,
+.menu-item--mega:focus-within > .mega-menu .mega-menu__col,
+.site-header.is-mega-open .menu-item--mega .mega-menu__col {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  animation: megaColIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mega-menu__col:nth-child(1) { animation-delay: 0.03s; }
+.mega-menu__col:nth-child(2) { animation-delay: 0.05s; }
+.mega-menu__col:nth-child(3) { animation-delay: 0.07s; }
+.mega-menu__col:nth-child(4) { animation-delay: 0.09s; }
+.mega-menu__col:nth-child(5) { animation-delay: 0.11s; }
+.mega-menu__col:nth-child(6) { animation-delay: 0.13s; }
+.mega-menu__col:nth-child(7) { animation-delay: 0.15s; }
+.mega-menu__col:nth-child(8) { animation-delay: 0.17s; }
+.mega-menu__col:nth-child(9) { animation-delay: 0.19s; }
+.mega-menu__col:nth-child(10) { animation-delay: 0.21s; }
+.mega-menu__col:nth-child(11) { animation-delay: 0.23s; }
+.mega-menu__col:nth-child(4n) {
+  border-right: 0;
+}
+
+@keyframes megaColIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Titres catégories — pas de soulignement (évite saut de ligne) */
+.mega-menu__parent,
+.mega-menu__parent--desktop {
+  margin: 0 0 0.45rem;
+  padding: 0 0 0.4rem;
+  border-bottom: 2px solid var(--color-orange);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.mega-menu__parent a,
+.mega-menu__parent--desktop a {
+  display: block;
+  font-family: var(--font-title);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-prune);
+  transition: color 0.2s ease;
+}
+
+.mega-menu__parent a:hover,
+.mega-menu__parent--desktop a:hover {
+  color: var(--color-orange);
+  text-decoration: none;
+}
+
+.mega-menu__children--desktop {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.85rem 0.65rem;
+}
+
+/* Liens enfants — padding fixe, survol sans décalage */
+.mega-menu__children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mega-menu__children li {
+  margin: 0;
+}
+
+.mega-menu__children a {
+  display: block;
+  position: relative;
+  padding: 0.38rem 0.5rem 0.38rem 0.75rem;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-decoration: none;
+  color: var(--color-aubergine);
+  border-radius: var(--radius-sm);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.mega-menu__children a span {
+  display: block;
+}
+
+.mega-menu__children a::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 2px;
+  background: var(--color-orange);
+  transform: translateY(-50%);
+  transition: height 0.2s ease;
+}
+
+.mega-menu__children a:hover,
+.mega-menu__children a:focus-visible {
+  color: var(--color-prune);
+  background-color: var(--color-lilas);
+  padding-left: 0.75rem;
+  text-decoration: none;
+}
+
+.mega-menu__children a:hover::before,
+.mega-menu__children a:focus-visible::before {
+  height: 60%;
+}
+
+/* Scrollbar : variables globales charte.css */
+
+@media (prefers-reduced-motion: reduce) {
+  .mega-menu,
+  .mega-menu__col {
+    transition: none;
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+
+  .menu-item--mega:hover > .mega-menu,
+  .menu-item--mega.is-open > .mega-menu {
+    transform: none;
+  }
+
+  .mega-menu__col {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1200px) {
+  .mega-menu__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mega-menu__col {
+    border-right: 1px solid var(--color-border);
+  }
+
+  .mega-menu__col:nth-child(4n) {
+    border-right: 1px solid var(--color-border);
+  }
+
+  .mega-menu__col:nth-child(3n) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 991px) {
+  .mega-menu {
+    position: static;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    display: none;
+  }
+
+  .menu-item--mega.is-open > .mega-menu {
+    display: block;
+  }
+
+  .mega-menu__shell {
+    width: 100%;
+    max-width: none;
+    margin-top: 0.35rem;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+  }
+
+  .mega-menu__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mega-menu__catalogue-link {
+    text-align: center;
+  }
+
+  .mega-menu__grid {
+    grid-template-columns: 1fr;
+    max-height: none;
+    padding: 0.35rem 0;
+  }
+
+  .mega-menu__col {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.65rem 1rem;
+  }
+
+  .mega-menu__col:last-child {
+    border-bottom: 0;
+  }
+}

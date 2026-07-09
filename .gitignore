@@ -1,0 +1,18 @@
+# Secrets et configuration locale
+wp-config.php
+.env
+.env.*
+
+# Sauvegardes et fichiers temporaires WordPress
+wp-content/updraft/
+wp-content/upgrade/
+wp-content/cache/
+wp-content/backup*/
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

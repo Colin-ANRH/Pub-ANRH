@@ -1,0 +1,42 @@
+/**
+ * Charte typographique ANRH — Luciole + Neulis Neue (+ Verdana repli)
+ * Déposer les fichiers .woff2 dans assets/fonts/ si besoin :
+ *   Luciole-Regular.woff2, Luciole-Bold.woff2
+ *   NeulisNeue-BlackItalic.woff2 (licence séparée)
+ */
+
+@font-face {
+  font-family: "Luciole";
+  src:
+    local("Luciole"),
+    local("Luciole Regular"),
+    url("Luciole-Regular.woff2") format("woff2"),
+    url("Luciole-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Luciole";
+  src:
+    local("Luciole Bold"),
+    local("Luciole-Bold"),
+    url("Luciole-Bold.woff2") format("woff2"),
+    url("Luciole-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neulis Neue";
+  src:
+    local("Neulis Neue Black Italic"),
+    local("NeulisNeue-BlackItalic"),
+    url("NeulisNeue-BlackItalic.woff2") format("woff2"),
+    url("NeulisNeue-BlackItalic.woff") format("woff");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
