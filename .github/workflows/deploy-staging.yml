@@ -22,11 +22,15 @@ jobs:
       - name: Préparer le bundle de déploiement
         env:
           OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
+          STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
+          STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
         run: |
           php deploy-ovh/build-wp-config.php
           mkdir -p deploy-bundle/wp-content/themes
+          mkdir -p deploy-bundle/wp-content/mu-plugins
           cp wp-config.php deploy-bundle/
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
+          cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
           cp -r wp-content/themes/anrhpub_theme deploy-bundle/wp-content/themes/
 
       - name: Déployer sur OVH (FTP)

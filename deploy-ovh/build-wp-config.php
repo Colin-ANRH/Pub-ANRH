@@ -9,13 +9,43 @@ if ( $password === false || $password === '' ) {
 	exit( 1 );
 }
 
+$staging_user = getenv( 'STAGING_GATE_USER' );
+if ( $staging_user === false || $staging_user === '' ) {
+	$staging_user = 'anrh';
+}
+
+$staging_password = getenv( 'STAGING_GATE_PASSWORD' );
+if ( $staging_password === false || $staging_password === '' ) {
+	fwrite( STDERR, "STAGING_GATE_PASSWORD manquant — verrou staging désactivé.\n" );
+	$staging_user     = '';
+	$staging_password = '';
+	$gate_enabled     = 'false';
+} else {
+	$gate_enabled = 'true';
+}
+
 $template = file_get_contents( __DIR__ . '/wp-config.template.php' );
 if ( $template === false ) {
 	fwrite( STDERR, "Template wp-config.template.php introuvable.\n" );
 	exit( 1 );
 }
 
-$config = str_replace( 'VOTRE_MDP_OVH', $password, $template );
+$config = str_replace(
+	array(
+		'VOTRE_MDP_OVH',
+		'VOTRE_STAGING_GATE_ENABLED',
+		'VOTRE_STAGING_USER',
+		'VOTRE_STAGING_PASSWORD',
+	),
+	array(
+		$password,
+		$gate_enabled,
+		$staging_user,
+		$staging_password,
+	),
+	$template
+);
+
 $target = dirname( __DIR__ ) . '/wp-config.php';
 
 if ( file_put_contents( $target, $config ) === false ) {

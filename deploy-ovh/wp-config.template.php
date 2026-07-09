@@ -26,6 +26,11 @@ $table_prefix = 'wp_';
 define( 'WP_DEBUG', false );
 define( 'WP_ENVIRONMENT_TYPE', 'staging' );
 
+// Verrou staging — retirer à la mise en production.
+define( 'ANRH_STAGING_GATE', VOTRE_STAGING_GATE_ENABLED );
+define( 'ANRH_STAGING_USER', 'VOTRE_STAGING_USER' );
+define( 'ANRH_STAGING_PASSWORD', 'VOTRE_STAGING_PASSWORD' );
+
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }
