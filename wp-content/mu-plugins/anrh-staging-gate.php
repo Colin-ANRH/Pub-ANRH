@@ -9,6 +9,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Jamais sur l'environnement local de développement.
+if ( defined( 'WP_ENVIRONMENT_TYPE' ) && WP_ENVIRONMENT_TYPE === 'local' ) {
+	return;
+}
+
+// Uniquement sur l'environnement staging OVH.
+if ( ! defined( 'WP_ENVIRONMENT_TYPE' ) || WP_ENVIRONMENT_TYPE !== 'staging' ) {
+	return;
+}
+
 if ( ! defined( 'ANRH_STAGING_GATE' ) || ! ANRH_STAGING_GATE ) {
 	return;
 }
