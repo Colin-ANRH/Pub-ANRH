@@ -13,17 +13,21 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Préparer fichiers OVH
+      - name: Préparer le bundle de déploiement
         env:
           OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
         run: |
           php deploy-ovh/build-wp-config.php
-          cp deploy-ovh/.htaccess .htaccess
+          mkdir -p deploy-bundle/wp-content/themes
+          cp wp-config.php deploy-bundle/
+          cp deploy-ovh/.htaccess deploy-bundle/.htaccess
+          cp -r wp-content/themes/anrhpub_theme deploy-bundle/wp-content/themes/
 
       - name: Déployer sur OVH (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -31,13 +35,7 @@ jobs:
           server: ${{ secrets.OVH_FTP_SERVER }}
           username: ${{ secrets.OVH_FTP_USERNAME }}
           password: ${{ secrets.OVH_FTP_PASSWORD }}
-          # Racine FTP = home OVH. Ajuster si votre FTP s'ouvre déjà dans www/
+          local-dir: deploy-bundle/
+          # Racine FTP = home OVH. Si FTP s'ouvre dans www/, utiliser pub.anrh.fr/
           server-dir: www/pub.anrh.fr/
-          exclude: |
-            **/.git*
-            **/.github/**
-            deploy-ovh/**
-            export*.sql
-            .gitignore
-            readme.html
-            license.txt
+          log-level: minimal
