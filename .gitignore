@@ -3,6 +3,9 @@ wp-config.php
 .env
 .env.*
 
+# Exports base de données (déploiement manuel)
+export*.sql
+
 # Sauvegardes et fichiers temporaires WordPress
 wp-content/updraft/
 wp-content/upgrade/
