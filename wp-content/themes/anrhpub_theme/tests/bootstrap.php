@@ -17,6 +17,6 @@ $GLOBALS['anrhpub_test_posts']        = array();
 require dirname( __DIR__ ) . '/tests/wp-stubs.php';
 
 require dirname( __DIR__ ) . '/inc/b2b/client-pro.php';
-require dirname( __DIR__ ) . '/inc/product-colors/taxonomy.php';
+require dirname( __DIR__ ) . '/inc/product-colors/bootstrap.php';
 require dirname( __DIR__ ) . '/inc/b2b/quotes.php';
 require dirname( __DIR__ ) . '/inc/quote-cart.php';

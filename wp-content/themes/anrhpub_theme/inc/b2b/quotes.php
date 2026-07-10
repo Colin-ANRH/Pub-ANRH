@@ -211,6 +211,10 @@ function anrhpub_get_client_quotes( $user_id = 0, $args = array() ) {
 function anrhpub_client_owns_quote( $quote_id, $user_id = 0 ) {
 	$user_id = $user_id ? (int) $user_id : anrhpub_get_client_user_id();
 
+	if ( $user_id <= 0 ) {
+		return false;
+	}
+
 	return (int) anrhpub_get_quote_meta( $quote_id, 'client_id', 0 ) === $user_id;
 }
 
