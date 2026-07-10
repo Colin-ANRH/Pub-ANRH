@@ -190,10 +190,13 @@ function anrhpub_run_charset_repair() {
 	if ( $meta_rows ) {
 		foreach ( $meta_rows as $row ) {
 			$original = (string) $row['meta_value'];
-			$fixed    = anrhpub_normalize_utf8_text( $original );
+			if ( is_serialized( $original ) ) {
+				continue;
+			}
+			$fixed = anrhpub_normalize_utf8_text( $original );
 
 			if ( $fixed !== $original ) {
-				update_post_meta_by_id( (int) $row['meta_id'], $fixed );
+				update_metadata_by_mid( 'post', (int) $row['meta_id'], $fixed );
 				++$stats['meta'];
 			}
 		}
@@ -201,7 +204,7 @@ function anrhpub_run_charset_repair() {
 
 	$terms = get_terms(
 		array(
-			'taxonomy'   => get_taxonomies(),
+			'taxonomy'   => array( 'anr_category', 'anr_color', 'anr_material', 'anr_product_badge', 'category' ),
 			'hide_empty' => false,
 		)
 	);
@@ -255,11 +258,16 @@ function anrhpub_maybe_run_charset_repair() {
 		return;
 	}
 
+	// Admin uniquement — évite timeout / erreur fatale sur le front public.
+	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
 	$stats = anrhpub_run_charset_repair();
 	update_option( 'anrhpub_charset_repair_version', ANRHPUB_CHARSET_REPAIR_VERSION, false );
 	update_option( 'anrhpub_charset_repair_last_stats', $stats, false );
 }
-add_action( 'init', 'anrhpub_maybe_run_charset_repair', 5 );
+add_action( 'admin_init', 'anrhpub_maybe_run_charset_repair', 5 );
 
 /**
  * Connexion MySQL utf8mb4 explicite.
