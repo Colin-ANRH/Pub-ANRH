@@ -82,10 +82,14 @@ Workflow : **Deploy staging OVH (pub.anrh.fr)**
 
 Déploie via FTP vers **`pub.anrh.fr/`** (racine FTP, hors `www/`) :
 - tous les thèmes (`wp-content/themes/`)
+- médias (`wp-content/uploads/`)
+- plugins (`wp-content/plugins/`)
 - `wp-config.php` (généré)
 - `.htaccess` OVH
 - mu-plugin staging
 - fichiers PHP racine
+
+> **Important :** le contenu (pages, produits, menus) est dans la **base MySQL**. Si le site staging ne ressemble pas au local, réimportez la base avec `deploy-ovh/export-staging-db.ps1` puis phpMyAdmin OVH.
 
 ### Manuel — déploiement complet WordPress
 

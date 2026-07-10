@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -28,12 +28,16 @@ jobs:
           php deploy-ovh/build-wp-config.php
           mkdir -p deploy-bundle/wp-content/themes
           mkdir -p deploy-bundle/wp-content/mu-plugins
+          mkdir -p deploy-bundle/wp-content/uploads
+          mkdir -p deploy-bundle/wp-content/plugins
           cp wp-config.php deploy-bundle/
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
           cp deploy-ovh/ovh-path-test.php deploy-bundle/ovh-path-test.php
           cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
           cp -r wp-content/themes/* deploy-bundle/wp-content/themes/
+          cp -r wp-content/uploads/* deploy-bundle/wp-content/uploads/ 2>/dev/null || true
+          cp -r wp-content/plugins/* deploy-bundle/wp-content/plugins/
           if [ -n "${{ secrets.OVH_FTP_REMOTE_DIR }}" ]; then
             echo "REMOTE_DIR=${{ secrets.OVH_FTP_REMOTE_DIR }}" >> $GITHUB_ENV
           else
