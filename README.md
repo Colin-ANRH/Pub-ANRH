@@ -80,8 +80,8 @@ Le dépôt contient une installation WordPress complète. Les parties **maintenu
 
 Workflow : **Deploy staging OVH (pub.anrh.fr)**
 
-Déploie via FTP :
-- thème `anrhpub_theme`
+Déploie via FTP vers **`pub.anrh.fr/`** (racine FTP, hors `www/`) :
+- tous les thèmes (`wp-content/themes/`)
 - `wp-config.php` (généré)
 - `.htaccess` OVH
 - mu-plugin staging

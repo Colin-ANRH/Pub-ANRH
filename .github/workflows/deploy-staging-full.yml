@@ -60,6 +60,7 @@ jobs:
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: upload-bundle/
           server-dir: pub.anrh.fr/
+          state-name: ovh-pub-anrh-fr-full
           log-level: standard
 
       - name: Décompresser sur le serveur
@@ -72,4 +73,4 @@ jobs:
               exit 0
             fi
           done
-          echo "::warning::Decompression HTTP impossible. Extrayez deploy.zip manuellement via FTP/FileZilla dans www/pub.anrh.fr/"
+          echo "::warning::Decompression HTTP impossible. Extrayez deploy.zip manuellement via FTP/FileZilla dans pub.anrh.fr/"

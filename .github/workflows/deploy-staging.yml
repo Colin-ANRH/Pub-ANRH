@@ -33,7 +33,7 @@ jobs:
           cp deploy-ovh/ovh-path-test.php deploy-bundle/ovh-path-test.php
           cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
-          cp -r wp-content/themes/anrhpub_theme deploy-bundle/wp-content/themes/
+          cp -r wp-content/themes/* deploy-bundle/wp-content/themes/
           if [ -n "${{ secrets.OVH_FTP_REMOTE_DIR }}" ]; then
             echo "REMOTE_DIR=${{ secrets.OVH_FTP_REMOTE_DIR }}" >> $GITHUB_ENV
           else
@@ -48,4 +48,5 @@ jobs:
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: deploy-bundle/
           server-dir: ${{ env.REMOTE_DIR }}
+          state-name: ovh-pub-anrh-fr
           log-level: minimal
