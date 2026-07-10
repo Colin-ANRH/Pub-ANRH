@@ -105,6 +105,7 @@ Configurer dans **Settings → Secrets and variables → Actions** :
 | `OVH_DB_PASSWORD` | Mot de passe MySQL (`anrservipubanrh`) |
 | `STAGING_GATE_USER` | Identifiant du verrou staging |
 | `STAGING_GATE_PASSWORD` | Mot de passe du verrou staging |
+| `DEPLOY_UNZIP_TOKEN` | Token pour déploiement complet (archive zip) |
 
 ---
 
