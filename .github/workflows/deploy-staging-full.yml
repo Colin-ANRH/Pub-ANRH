@@ -1,0 +1,46 @@
+name: Deploy staging OVH — complet (1ère fois)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging-ovh-full
+  cancel-in-progress: true
+
+jobs:
+  deploy-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Préparer fichiers OVH
+        env:
+          OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
+          STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
+          STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
+        run: |
+          php deploy-ovh/build-wp-config.php
+          cp deploy-ovh/.htaccess .htaccess
+
+      - name: Déployer tout WordPress sur OVH (FTP)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          server-dir: www/pub.anrh.fr/
+          log-level: minimal
+          exclude: |
+            **/.git*
+            **/.github/**
+            deploy-ovh/**
+            export*.sql
+            .gitignore
+            readme.html
+            license.txt
+            wp-content/updraft/**
+            wp-content/upgrade/**
+            wp-content/cache/**

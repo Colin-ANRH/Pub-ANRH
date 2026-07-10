@@ -30,6 +30,7 @@ jobs:
           mkdir -p deploy-bundle/wp-content/mu-plugins
           cp wp-config.php deploy-bundle/
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
+          cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
           cp -r wp-content/themes/anrhpub_theme deploy-bundle/wp-content/themes/
 
