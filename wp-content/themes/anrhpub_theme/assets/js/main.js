@@ -2562,8 +2562,9 @@
       }
       compareApp.innerHTML = '<div class="compare-app__loading"><span class="compare-app__spinner" aria-hidden="true"></span><p>' + escapeHtml(i18n.compareLoading || '') + '</p></div>';
       var apiUrl = cfg.compareApiUrl || '';
+      var compareNonce = cfg.compareNonce || '';
       var url = apiUrl
-        ? apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'ids=' + encodeURIComponent(ids.join(','))
+        ? apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'ids=' + encodeURIComponent(ids.join(',')) + (compareNonce ? '&nonce=' + encodeURIComponent(compareNonce) : '')
         : '';
       var fetcher = url
         ? fetch(url, { credentials: 'same-origin' }).then(function (r) { return r.json(); })

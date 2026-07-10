@@ -11,7 +11,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Syntaxe PHP (theme)
+        run: |
+          find wp-content/themes/anrhpub_theme -name '*.php' -print0 | while IFS= read -r -d '' file; do
+            php -l "$file" || exit 1
+          done
+
+      - name: Securite — pas de mots de passe en dur
+        run: |
+          if grep -rE "Anrh-(Admin|Client)-[0-9]{4}" wp-content/themes/anrhpub_theme; then
+            echo "::error::Mots de passe en dur detectes dans le theme"
+            exit 1
+          fi
+
+      - name: Securite — migration PrestaShop CLI uniquement
+        run: |
+          grep -q "CLI uniquement" wp-content/themes/anrhpub_theme/tools/migrate-prestashop.php
+
+      - name: Test generation wp-config
+        env:
+          OVH_DB_PASSWORD: test-db-password
+          STAGING_GATE_USER: ci-user
+          STAGING_GATE_PASSWORD: ci-password
+        run: php deploy-ovh/build-wp-config.php
+
   deploy:
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -32,11 +65,18 @@ jobs:
           mkdir -p deploy-bundle/wp-content/plugins
           cp wp-config.php deploy-bundle/
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
-          cp deploy-ovh/ovh-path-test.php deploy-bundle/ovh-path-test.php
           cp deploy-ovh/staging-health.php deploy-bundle/staging-health.php
           cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
-          cp -r wp-content/themes/* deploy-bundle/wp-content/themes/
+          for theme_dir in wp-content/themes/*; do
+            theme_name=$(basename "$theme_dir")
+            mkdir -p "deploy-bundle/wp-content/themes/$theme_name"
+            if [ "$theme_name" = "anrhpub_theme" ]; then
+              rsync -a --exclude='bin/' --exclude='tools/' "$theme_dir/" "deploy-bundle/wp-content/themes/$theme_name/"
+            else
+              cp -r "$theme_dir/." "deploy-bundle/wp-content/themes/$theme_name/"
+            fi
+          done
           cp -r wp-content/uploads/* deploy-bundle/wp-content/uploads/ 2>/dev/null || true
           cp -r wp-content/plugins/* deploy-bundle/wp-content/plugins/
           if [ -n "${{ secrets.OVH_FTP_REMOTE_DIR }}" ]; then
@@ -55,3 +95,9 @@ jobs:
           server-dir: ${{ env.REMOTE_DIR }}
           state-name: ovh-pub-anrh-fr
           log-level: minimal
+
+      - name: Smoke test (assets theme)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.anrh.fr/wp-content/themes/anrhpub_theme/style.css")
+          echo "HTTP $code"
+          test "$code" = "200"

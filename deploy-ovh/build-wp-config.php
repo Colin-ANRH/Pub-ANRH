@@ -16,13 +16,11 @@ if ( $staging_user === false || $staging_user === '' ) {
 
 $staging_password = getenv( 'STAGING_GATE_PASSWORD' );
 if ( $staging_password === false || $staging_password === '' ) {
-	fwrite( STDERR, "STAGING_GATE_PASSWORD manquant — verrou staging désactivé.\n" );
-	$staging_user     = '';
-	$staging_password = '';
-	$gate_enabled     = 'false';
-} else {
-	$gate_enabled = 'true';
+	fwrite( STDERR, "STAGING_GATE_PASSWORD manquant — deploy staging annule.\n" );
+	exit( 1 );
 }
+
+$gate_enabled = 'true';
 
 $template = file_get_contents( __DIR__ . '/wp-config.template.php' );
 if ( $template === false ) {

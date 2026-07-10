@@ -9,8 +9,7 @@
  *   php wp-content/themes/anrhpub_theme/tools/migrate-prestashop.php --run=1 --step=all --dry-run=1
  *   php wp-content/themes/anrhpub_theme/tools/migrate-prestashop.php --run=1 --step=all
  *
- * HTTP (staging seulement):
- *   .../migrate-prestashop.php?run=1&token=VOTRE_TOKEN&step=diagnose
+ * HTTP : désactivé (CLI uniquement).
  */
 
 declare( strict_types=1 );
@@ -30,8 +29,6 @@ const SOURCE_DB_PREFIX   = 'ps_';
 const SOURCE_SHOP_ID     = 1;
 const SOURCE_LANG_ID     = 1;
 const SOURCE_BASE_URL    = 'https://anr-pub.fr';
-const HTTP_TOKEN         = 'CHANGE_ME';
-
 /** @var array<int, string> Presta order_state id => WP status */
 const ORDER_STATUS_MAP = array(
 	1  => 'pending',
@@ -1234,16 +1231,16 @@ function anrh_mig_run_step( string $step, bool $dry_run ): void {
 }
 
 function anrh_mig_run(): void {
-	$run    = (string) anrh_mig_arg( 'run', '0' );
-	$token  = (string) anrh_mig_arg( 'token', '' );
-	$step   = (string) anrh_mig_arg( 'step', 'diagnose' );
-	$dry_run = anrh_mig_is_dry_run();
-
 	if ( 'cli' !== PHP_SAPI ) {
-		if ( 'CHANGE_ME' === HTTP_TOKEN || $token !== HTTP_TOKEN ) {
-			wp_die( 'Token HTTP invalide.' );
+		if ( function_exists( 'status_header' ) ) {
+			status_header( 403 );
 		}
+		exit( "Migration PrestaShop : CLI uniquement.\n" );
 	}
+
+	$run     = (string) anrh_mig_arg( 'run', '0' );
+	$step    = (string) anrh_mig_arg( 'step', 'diagnose' );
+	$dry_run = anrh_mig_is_dry_run();
 
 	if ( '1' !== $run ) {
 		anrh_mig_log( 'Migration PrestaShop v' . ANRH_MIG_VERSION );

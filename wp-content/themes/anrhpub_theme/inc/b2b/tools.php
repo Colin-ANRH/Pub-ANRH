@@ -116,6 +116,8 @@ function anrhpub_get_compare_products_payload( array $ids ) {
  * AJAX — charge les produits du comparateur.
  */
 function anrhpub_ajax_compare_products() {
+	check_ajax_referer( 'anrhpub_compare', 'nonce' );
+
 	$raw = isset( $_GET['ids'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['ids'] ) ) : '';
 	$ids = array_filter( array_map( 'absint', explode( ',', $raw ) ) );
 
@@ -140,15 +142,15 @@ function anrhpub_handle_cart_export() {
 		wp_die( esc_html__( 'Lien invalide.', 'anrhpub_theme' ), 403 );
 	}
 
-	$items = array();
-	if ( anrhpub_is_client_logged_in() ) {
-		$items = anrhpub_get_user_quote_cart_raw();
-	} elseif ( ! empty( $_GET['cart'] ) ) {
-		$decoded = json_decode( rawurldecode( (string) wp_unslash( $_GET['cart'] ) ), true );
-		if ( is_array( $decoded ) ) {
-			$items = anrhpub_sanitize_quote_cart_items( $decoded );
-		}
+	if ( ! function_exists( 'anrhpub_is_client_logged_in' ) || ! anrhpub_is_client_logged_in() ) {
+		wp_die( esc_html__( 'Connexion requise pour exporter le panier.', 'anrhpub_theme' ), 403 );
 	}
+
+	if ( ! function_exists( 'anrhpub_can_view_prices' ) || ! anrhpub_can_view_prices() ) {
+		wp_die( esc_html__( 'Export non autorisé pour votre compte.', 'anrhpub_theme' ), 403 );
+	}
+
+	$items = anrhpub_get_user_quote_cart_raw();
 
 	$rows   = array( array( 'Reference', 'Produit', 'Quantite', 'Couleur', 'Prix HT' ) );
 	$lines  = function_exists( 'anrhpub_enrich_quote_cart_items' ) ? anrhpub_enrich_quote_cart_items( $items ) : array();
@@ -186,16 +188,21 @@ add_action( 'template_redirect', 'anrhpub_handle_cart_export', 1 );
  * @return string
  */
 function anrhpub_get_cart_export_url( $items = null ) {
-	$args = array(
-		'anrhpub_download' => 'cart_xlsx',
-		'nonce'            => wp_create_nonce( 'anrhpub_cart_export' ),
-	);
-
-	if ( is_array( $items ) && $items ) {
-		$args['cart'] = rawurlencode( wp_json_encode( $items ) );
+	if ( ! function_exists( 'anrhpub_is_client_logged_in' ) || ! anrhpub_is_client_logged_in() ) {
+		return '';
 	}
 
-	return add_query_arg( $args, home_url( '/' ) );
+	if ( ! function_exists( 'anrhpub_can_view_prices' ) || ! anrhpub_can_view_prices() ) {
+		return '';
+	}
+
+	return add_query_arg(
+		array(
+			'anrhpub_download' => 'cart_xlsx',
+			'nonce'            => wp_create_nonce( 'anrhpub_cart_export' ),
+		),
+		home_url( '/' )
+	);
 }
 
 /**
@@ -253,45 +260,44 @@ function anrhpub_get_client_shared_lists( $user_id = 0 ) {
  * Scripts outils B2B.
  */
 function anrhpub_enqueue_b2b_tools() {
-	wp_localize_script(
-		'anrhpub-main',
-		'anrhpubB2b',
-		array(
-			'compareKey'      => 'anrhpub_compare',
-			'compareApiUrl'   => add_query_arg( 'action', 'anrhpub_compare_products', admin_url( 'admin-ajax.php' ) ),
-			'restProductsUrl' => rest_url( 'wp/v2/anr_product' ),
-			'quoteDraftNonce' => wp_create_nonce( 'anrhpub_quote_draft' ),
-			'sharedListNonce' => wp_create_nonce( 'anrhpub_shared_list' ),
-			'cartExportUrl'   => anrhpub_get_cart_export_url(),
-			'compareUrl'      => anrhpub_compare_url(),
-			'catalogueUrl'    => function_exists( 'anrhpub_catalogue_url' ) ? anrhpub_catalogue_url() : home_url( '/' ),
-			'compareMax'      => 4,
-			'i18n'            => array(
-				'compareAdded'    => __( 'Ajouté au comparateur.', 'anrhpub_theme' ),
-				'compareRemoved'  => __( 'Retiré du comparateur.', 'anrhpub_theme' ),
-				'compareMax'      => __( 'Maximum 4 produits dans le comparateur.', 'anrhpub_theme' ),
-				'compareEmpty'    => __( 'Aucun produit sélectionné pour le moment.', 'anrhpub_theme' ),
-				'compareEmptyHint'=> __( 'Ouvrez une fiche produit et cliquez sur « Comparer », ou utilisez le bouton sur les vignettes du catalogue.', 'anrhpub_theme' ),
-				'compareError'    => __( 'Impossible de charger les produits. Rechargez la page.', 'anrhpub_theme' ),
-				'compareLoading'  => __( 'Chargement du comparateur…', 'anrhpub_theme' ),
-				'compareCount'    => __( '%1$d / %2$d produits', 'anrhpub_theme' ),
-				'compareClear'    => __( 'Tout effacer', 'anrhpub_theme' ),
-				'compareCatalogue'=> __( 'Parcourir le catalogue', 'anrhpub_theme' ),
-				'compareRemove'   => __( 'Retirer', 'anrhpub_theme' ),
-				'compareView'     => __( 'Voir la fiche', 'anrhpub_theme' ),
-				'compareAddCart'    => __( 'Ajouter au panier', 'anrhpub_theme' ),
-				'compareChooseColor'=> __( 'Choisir une couleur', 'anrhpub_theme' ),
-				'compareSpecs'    => __( 'Caractéristiques comparées', 'anrhpub_theme' ),
-				'rowReference'    => __( 'Référence', 'anrhpub_theme' ),
-				'rowCategory'     => __( 'Catégorie', 'anrhpub_theme' ),
-				'rowMaterial'     => __( 'Matière', 'anrhpub_theme' ),
-				'rowStock'        => __( 'Disponibilité', 'anrhpub_theme' ),
-				'rowPriceHt'      => __( 'Prix HT', 'anrhpub_theme' ),
-				'rowPriceTtc'     => __( 'Prix TTC', 'anrhpub_theme' ),
-				'rowExcerpt'      => __( 'Description', 'anrhpub_theme' ),
-				'draftSaved'      => __( 'Brouillon enregistré.', 'anrhpub_theme' ),
-			),
-		)
+	$payload = array(
+		'compareKey'      => 'anrhpub_compare',
+		'compareApiUrl'   => add_query_arg( 'action', 'anrhpub_compare_products', admin_url( 'admin-ajax.php' ) ),
+		'compareNonce'    => wp_create_nonce( 'anrhpub_compare' ),
+		'restProductsUrl' => rest_url( 'wp/v2/anr_product' ),
+		'quoteDraftNonce' => wp_create_nonce( 'anrhpub_quote_draft' ),
+		'sharedListNonce' => wp_create_nonce( 'anrhpub_shared_list' ),
+		'cartExportUrl'   => anrhpub_get_cart_export_url(),
+		'compareUrl'      => anrhpub_compare_url(),
+		'catalogueUrl'    => function_exists( 'anrhpub_catalogue_url' ) ? anrhpub_catalogue_url() : home_url( '/' ),
+		'compareMax'      => 4,
+		'i18n'            => array(
+			'compareAdded'      => __( 'Ajouté au comparateur.', 'anrhpub_theme' ),
+			'compareRemoved'    => __( 'Retiré du comparateur.', 'anrhpub_theme' ),
+			'compareMax'        => __( 'Maximum 4 produits dans le comparateur.', 'anrhpub_theme' ),
+			'compareEmpty'      => __( 'Aucun produit sélectionné pour le moment.', 'anrhpub_theme' ),
+			'compareEmptyHint'  => __( 'Ouvrez une fiche produit et cliquez sur « Comparer », ou utilisez le bouton sur les vignettes du catalogue.', 'anrhpub_theme' ),
+			'compareError'      => __( 'Impossible de charger les produits. Rechargez la page.', 'anrhpub_theme' ),
+			'compareLoading'    => __( 'Chargement du comparateur…', 'anrhpub_theme' ),
+			'compareCount'      => __( '%1$d / %2$d produits', 'anrhpub_theme' ),
+			'compareClear'      => __( 'Tout effacer', 'anrhpub_theme' ),
+			'compareCatalogue'  => __( 'Parcourir le catalogue', 'anrhpub_theme' ),
+			'compareRemove'     => __( 'Retirer', 'anrhpub_theme' ),
+			'compareView'       => __( 'Voir la fiche', 'anrhpub_theme' ),
+			'compareAddCart'    => __( 'Ajouter au panier', 'anrhpub_theme' ),
+			'compareChooseColor' => __( 'Choisir une couleur', 'anrhpub_theme' ),
+			'compareSpecs'      => __( 'Caractéristiques comparées', 'anrhpub_theme' ),
+			'rowReference'      => __( 'Référence', 'anrhpub_theme' ),
+			'rowCategory'       => __( 'Catégorie', 'anrhpub_theme' ),
+			'rowMaterial'       => __( 'Matière', 'anrhpub_theme' ),
+			'rowStock'          => __( 'Disponibilité', 'anrhpub_theme' ),
+			'rowPriceHt'        => __( 'Prix HT', 'anrhpub_theme' ),
+			'rowPriceTtc'       => __( 'Prix TTC', 'anrhpub_theme' ),
+			'rowExcerpt'        => __( 'Description', 'anrhpub_theme' ),
+			'draftSaved'        => __( 'Brouillon enregistré.', 'anrhpub_theme' ),
+		),
 	);
+
+	wp_localize_script( 'anrhpub-main', 'anrhpubB2b', $payload );
 }
 add_action( 'wp_enqueue_scripts', 'anrhpub_enqueue_b2b_tools', 40 );
