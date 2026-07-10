@@ -68,13 +68,15 @@ jobs:
           cp deploy-ovh/staging-health.php deploy-bundle/staging-health.php
           cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
-          for theme_dir in wp-content/themes/*; do
+          cp wp-content/themes/index.php deploy-bundle/wp-content/themes/ 2>/dev/null || true
+          for theme_dir in wp-content/themes/*/; do
+            [ -d "$theme_dir" ] || continue
             theme_name=$(basename "$theme_dir")
             mkdir -p "deploy-bundle/wp-content/themes/$theme_name"
             if [ "$theme_name" = "anrhpub_theme" ]; then
-              rsync -a --exclude='bin/' --exclude='tools/' "$theme_dir/" "deploy-bundle/wp-content/themes/$theme_name/"
+              rsync -a --exclude='bin/' --exclude='tools/' "${theme_dir}/" "deploy-bundle/wp-content/themes/$theme_name/"
             else
-              cp -r "$theme_dir/." "deploy-bundle/wp-content/themes/$theme_name/"
+              cp -r "${theme_dir}." "deploy-bundle/wp-content/themes/$theme_name/"
             fi
           done
           cp -r wp-content/uploads/* deploy-bundle/wp-content/uploads/ 2>/dev/null || true
