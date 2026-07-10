@@ -958,6 +958,19 @@ function anrhpub_ajax_get_favorites_html() {
 add_action( 'wp_ajax_anrhpub_get_favorites_html', 'anrhpub_ajax_get_favorites_html' );
 
 /**
+ * Pages nécessitant account.css (formulaires compte + contact).
+ *
+ * @return bool
+ */
+function anrhpub_needs_account_css() {
+	if ( is_page( array( 'mon-compte', 'connexion', 'inscription', 'contact', 'panier-devis' ) ) ) {
+		return true;
+	}
+
+	return function_exists( 'anrhpub_is_account_page' ) && anrhpub_is_account_page();
+}
+
+/**
  * Scripts compte + favoris.
  */
 function anrhpub_enqueue_account_assets() {
@@ -982,10 +995,19 @@ function anrhpub_enqueue_account_assets() {
 		)
 	);
 
+	if ( ! anrhpub_needs_account_css() ) {
+		return;
+	}
+
+	$account_deps = array( 'anrhpub-charte' );
+	if ( wp_style_is( 'anrhpub-pages', 'enqueued' ) ) {
+		$account_deps[] = 'anrhpub-pages';
+	}
+
 	wp_enqueue_style(
 		'anrhpub-account',
 		ANRHPUB_THEME_URI . '/assets/css/account.css',
-		array( 'anrhpub-pages' ),
+		$account_deps,
 		ANRHPUB_THEME_VERSION
 	);
 }

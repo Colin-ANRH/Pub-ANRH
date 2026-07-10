@@ -51,6 +51,36 @@ RESOLVED_CRITICAL = [
     ("deploy-staging.yml", "Déploiement non vérifié après envoi.", "Smoke test HTTP post-deploy + exclusion bin/tools du bundle."),
 ]
 
+RESOLVED_SEO = [
+    ("inc/seo.php", "SEO basique, pas de schema ni noindex facettes.", "Meta OG/Twitter, canonical, JSON-LD Product/LocalBusiness, sitemap filtré, robots.txt prod."),
+    ("mu-plugins/anrh-staging-gate.php", "Staging indexable par les moteurs.", "Gate HTTP + noindex + sitemaps off + ajax/xmlrpc/feeds bloqués."),
+    ("deploy-ovh/.htaccess", "Pas de X-Robots-Tag global staging.", "Header noindex sur tout le staging (fichiers statiques inclus)."),
+    ("inc/gdpr.php", "Analytics actifs sur staging.", "Bandeau cookies et scripts analytics désactivés en staging."),
+]
+
+STAGING_CHECKLIST = [
+    "Push sur master → workflow « Deploy staging OVH (pub.anrh.fr) » (validate + FTP + smoke test).",
+    "Secrets GitHub : OVH_FTP_*, OVH_DB_PASSWORD, STAGING_GATE_USER, STAGING_GATE_PASSWORD.",
+    "wp-config généré : WP_ENVIRONMENT_TYPE=staging, ANRH_STAGING_GATE=true.",
+    "mu-plugin anrh-staging-gate.php actif (accès HTTP Basic-like par cookie).",
+    ".htaccess : X-Robots-Tag noindex + AddDefaultCharset UTF-8.",
+    "SEO désactivé sur staging : pas d'OG, pas de JSON-LD (inc/seo.php).",
+    "Vérifications : site en 401/403 sans auth ; curl -I → X-Robots-Tag ; robots.txt → Disallow: /.",
+]
+
+PRODUCTION_CHECKLIST = [
+    "Créer wp-config production : WP_ENVIRONMENT_TYPE=production, ANRH_STAGING_GATE=false.",
+    "Retirer le mu-plugin anrh-staging-gate.php du bundle de déploiement.",
+    "Remplacer deploy-ovh/.htaccess : supprimer le bloc X-Robots-Tag staging (garder HTTPS + UTF-8).",
+    "Sels WordPress uniques (ne pas réutiliser ceux du template staging).",
+    "Activer durcissement : DISALLOW_FILE_EDIT, FORCE_SSL_ADMIN, WP_DEBUG=false.",
+    "Réglages WP → Lecture : décocher « Décourager l'indexation » (blog_public=1).",
+    "Search Console : propriété + sitemap https://…/wp-sitemap.xml.",
+    "Export DB local → staging → prod avec wp search-replace (URLs + serialized-safe).",
+    "Vérifier charset DB utf8mb4 et collation utf8mb4_unicode_ci.",
+    "Retirer staging-health.php du webroot si encore présent.",
+]
+
 SECTIONS = [
     {
         "title": "Déploiement et infrastructure",
@@ -82,11 +112,12 @@ PRIORITY = [
         "Retirer staging-health du deploy automatique",
         "Réduire le scope git (core WP hors repo)",
         "Étendre la couverture PHPUnit (intégration WP)",
+        "PDF devis : police embarquée UTF-8 (au-delà de WinAnsi)",
     ]),
     ("P3 — Confort", [
         "Audit accessibilité WCAG 2.1 AA",
         "Internationalisation complète (.pot)",
-        "Stratégie production documentée",
+        "hreflang + image OG dédiée 1200px",
     ]),
 ]
 
@@ -191,6 +222,25 @@ def write_item(pdf: DebtPDF, num: int, level: str, path: str, problem: str, acti
     pdf.ln(3)
 
 
+def write_bullets(pdf: DebtPDF, bullets: list[str], indent: float = 2) -> None:
+    pdf.set_font("Arial", "", 9)
+    pdf.set_text_color(*C_TEXT)
+    for bullet in bullets:
+        pdf.set_x(MARGIN + indent)
+        pdf.cell(4, 5, "•")
+        pdf.multi_cell(CONTENT_W - indent - 4, 5, bullet)
+        pdf.ln(0.5)
+
+
+def write_checklist_section(pdf: DebtPDF, title: str, bullets: list[str]) -> None:
+    pdf.set_font("Arial", "B", 10.5)
+    pdf.set_text_color(*C_PRIMARY)
+    pdf.cell(0, 7, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(1)
+    write_bullets(pdf, bullets)
+    pdf.ln(3)
+
+
 def main() -> None:
     try:
         locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
@@ -220,7 +270,7 @@ def main() -> None:
     pdf.cell(0, 8, "6 dettes CRITIQUES corrigées", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(210, 225, 240)
-    pdf.cell(0, 7, "6 SÉCURITÉ + 6 QUALITÉ corrigées — sections 1 à 3", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 7, "6 SÉCURITÉ + 6 QUALITÉ + SEO corrigés — sections 1 à 4", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # Correctifs
     pdf.add_page()
@@ -271,9 +321,63 @@ def main() -> None:
     for i, (path, problem, action) in enumerate(RESOLVED_QUALITY, base + 1):
         write_item(pdf, i, "RÉSOLU", path, problem, action)
 
+    # SEO + staging
+    pdf.add_page()
+    pdf.header_bar("4. SEO et protection staging — corrigés")
+    pdf.set_font("Arial", "", 9.5)
+    pdf.set_text_color(*C_TEXT)
+    pdf.multi_cell(
+        CONTENT_W,
+        5,
+        "SEO avancé (production uniquement) et blocage d'indexation staging renforcé le "
+        + date.today().strftime("%d/%m/%Y")
+        + ". Voir section 5 pour les procédures de déploiement.",
+    )
+    pdf.ln(4)
+    base = len(RESOLVED_CRITICAL) + len(RESOLVED_SECURITY) + len(RESOLVED_QUALITY)
+    for i, (path, problem, action) in enumerate(RESOLVED_SEO, base + 1):
+        write_item(pdf, i, "RÉSOLU", path, problem, action)
+
+    # Guides staging / production
+    pdf.add_page()
+    pdf.header_bar("5. Mise en staging (pub.anrh.fr)")
+    pdf.set_font("Arial", "", 9.5)
+    pdf.set_text_color(*C_TEXT)
+    pdf.multi_cell(
+        CONTENT_W,
+        5,
+        "Procédure actuelle — environnement de prévisualisation OVH. "
+        "Le site n'est pas public : gate HTTP + noindex multi-couches.",
+    )
+    pdf.ln(3)
+    write_checklist_section(pdf, "Checklist staging (état attendu)", STAGING_CHECKLIST)
+
+    pdf.add_page()
+    pdf.header_bar("6. Mise en production")
+    pdf.set_font("Arial", "", 9.5)
+    pdf.set_text_color(*C_TEXT)
+    pdf.multi_cell(
+        CONTENT_W,
+        5,
+        "À exécuter avant l'ouverture au public. Fichiers clés : deploy-ovh/wp-config.template.php, "
+        "deploy-ovh/.htaccess, wp-content/mu-plugins/anrh-staging-gate.php, .github/workflows/deploy-staging.yml.",
+    )
+    pdf.ln(3)
+    write_checklist_section(pdf, "Checklist bascule production", PRODUCTION_CHECKLIST)
+
+    pdf.set_font("Arial", "B", 9.5)
+    pdf.set_text_color(*C_ACTION)
+    pdf.multi_cell(
+        CONTENT_W,
+        5,
+        "Important : le workflow CI actuel déploie uniquement le staging. "
+        "Prévoir un workflow ou un job manuel distinct pour la production (autre FTP, autre wp-config, sans gate).",
+    )
+    pdf.ln(4)
+
     # Restant
     item_no = 1
-    sec_num = 4
+    sec_num = 7
     for section in SECTIONS:
         pdf.add_page()
         pdf.header_bar(f"{sec_num}. {section['title']}")

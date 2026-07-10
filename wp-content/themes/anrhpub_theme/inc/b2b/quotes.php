@@ -336,6 +336,36 @@ function anrhpub_handle_quote_download() {
 add_action( 'template_redirect', 'anrhpub_handle_quote_download', 1 );
 
 /**
+ * Convertit du texte UTF-8 pour PDF Helvetica (WinAnsi / ISO-8859-1).
+ *
+ * @param string $text Texte UTF-8.
+ * @return string
+ */
+function anrhpub_pdf_latin1_text( $text ) {
+	$text = wp_strip_all_tags( (string) $text );
+	$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+	if ( function_exists( 'iconv' ) ) {
+		$converted = @iconv( 'UTF-8', 'ISO-8859-1//TRANSLIT', $text );
+		if ( false !== $converted ) {
+			return $converted;
+		}
+	}
+
+	return preg_replace( '/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/', '', $text );
+}
+
+/**
+ * Échappe une chaîne pour littéral PDF.
+ *
+ * @param string $text Chaîne Latin-1.
+ * @return string
+ */
+function anrhpub_pdf_escape_string( $text ) {
+	return str_replace( array( '\\', '(', ')' ), array( '\\\\', '\\(', '\\)' ), $text );
+}
+
+/**
  * PDF minimal (texte) sans dépendance externe.
  *
  * @param string $number  Quote number.
@@ -349,20 +379,20 @@ function anrhpub_output_simple_quote_pdf( $number, $status, $lines, $quote_id ) 
 	$rows      = array();
 	$total_ht  = 0.0;
 
-	$rows[] = 'Devis ' . $number;
-	$rows[] = get_bloginfo( 'name' ) . ' — ' . gmdate( 'd/m/Y' );
-	$rows[] = 'Statut : ' . anrhpub_get_quote_status_label( $status );
+	$rows[] = anrhpub_pdf_latin1_text( __( 'Devis', 'anrhpub_theme' ) . ' ' . $number );
+	$rows[] = anrhpub_pdf_latin1_text( get_bloginfo( 'name' ) . ' — ' . gmdate( 'd/m/Y' ) );
+	$rows[] = anrhpub_pdf_latin1_text( __( 'Statut :', 'anrhpub_theme' ) . ' ' . anrhpub_get_quote_status_label( $status ) );
 
 	if ( $user ) {
-		$rows[] = 'Client : ' . $user->display_name . ' (' . $user->user_email . ')';
+		$rows[] = anrhpub_pdf_latin1_text( __( 'Client :', 'anrhpub_theme' ) . ' ' . $user->display_name . ' (' . $user->user_email . ')' );
 		$company = anrhpub_get_client_company( $client_id );
 		if ( $company ) {
-			$rows[] = 'Societe : ' . $company;
+			$rows[] = anrhpub_pdf_latin1_text( __( 'Société :', 'anrhpub_theme' ) . ' ' . $company );
 		}
 	}
 
 	$rows[] = '';
-	$rows[] = 'Lignes :';
+	$rows[] = anrhpub_pdf_latin1_text( __( 'Lignes :', 'anrhpub_theme' ) );
 
 	foreach ( $lines as $line ) {
 		$label = ( $line['ref'] ?? '' ) ? ( $line['ref'] . ' — ' ) : '';
@@ -375,31 +405,32 @@ function anrhpub_output_simple_quote_pdf( $number, $status, $lines, $quote_id ) 
 			$total_ht += (float) $line['line_ht'];
 		}
 
-		$rows[] = $row;
+		$rows[] = anrhpub_pdf_latin1_text( $row );
 	}
 
 	if ( $total_ht > 0 ) {
 		$rows[] = '';
-		$rows[] = 'Total HT indicatif : ' . number_format( $total_ht, 2, ',', ' ' ) . ' EUR';
+		$rows[] = anrhpub_pdf_latin1_text(
+			__( 'Total HT indicatif :', 'anrhpub_theme' ) . ' ' . number_format( $total_ht, 2, ',', ' ' ) . ' EUR'
+		);
 	}
 
 	$message = (string) anrhpub_get_quote_meta( $quote_id, 'message', '' );
 	if ( $message ) {
 		$rows[] = '';
-		$rows[] = 'Message :';
-		$rows[] = $message;
+		$rows[] = anrhpub_pdf_latin1_text( __( 'Message :', 'anrhpub_theme' ) );
+		$rows[] = anrhpub_pdf_latin1_text( $message );
 	}
 
 	$text = implode( "\n", $rows );
-	$text = wp_strip_all_tags( $text );
-	$text = preg_replace( '/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/', '', $text );
+	$text = preg_replace( '/[^\x09\x0A\x0D\x20-\xFF]/', '', $text );
 
 	$lines_pdf = explode( "\n", wordwrap( $text, 90, "\n", true ) );
 	$content   = "BT\n/F1 10 Tf\n50 800 Td\n";
 	$y         = 0;
 
 	foreach ( $lines_pdf as $line ) {
-		$line = str_replace( array( '\\', '(', ')' ), array( '\\\\', '\\(', '\\)' ), $line );
+		$line     = anrhpub_pdf_escape_string( $line );
 		$content .= '(' . $line . ") Tj\n0 -14 Td\n";
 		++$y;
 		if ( $y > 50 ) {
@@ -415,7 +446,7 @@ function anrhpub_output_simple_quote_pdf( $number, $status, $lines, $quote_id ) 
 	$pdf .= "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n";
 	$pdf .= "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj\n";
 	$pdf .= "4 0 obj<< /Length $len >>stream\n$content\nendstream endobj\n";
-	$pdf .= "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n";
+	$pdf .= "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>endobj\n";
 	$pdf .= "xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000270 00000 n \n0000000" . ( 330 + $len ) . " 00000 n \n";
 	$pdf .= "trailer<< /Size 6 /Root 1 0 R >>\nstartxref\n" . ( 380 + $len ) . "\n%%EOF";
 

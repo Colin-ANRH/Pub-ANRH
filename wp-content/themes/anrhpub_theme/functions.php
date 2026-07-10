@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_THEME_VERSION', '2.37.0' );
+define( 'ANRHPUB_THEME_VERSION', '2.38.0' );
 define( 'ANRHPUB_THEME_DIR', get_template_directory() );
 define( 'ANRHPUB_THEME_URI', get_template_directory_uri() );
 
@@ -81,6 +81,35 @@ function anrhpub_theme_setup() {
 	);
 }
 add_action( 'after_setup_theme', 'anrhpub_theme_setup' );
+
+/**
+ * UTF-8 : évite les accents cassés (Apache, e-mails, chaînes PHP).
+ */
+function anrhpub_utf8_bootstrap() {
+	if ( function_exists( 'mb_internal_encoding' ) ) {
+		mb_internal_encoding( 'UTF-8' );
+	}
+}
+add_action( 'after_setup_theme', 'anrhpub_utf8_bootstrap', 0 );
+
+/**
+ * En-tête HTML UTF-8 explicite sur le front.
+ */
+function anrhpub_utf8_headers() {
+	if ( is_admin() || headers_sent() ) {
+		return;
+	}
+
+	header( 'Content-Type: text/html; charset=UTF-8' );
+}
+add_action( 'send_headers', 'anrhpub_utf8_headers', 0 );
+
+add_filter(
+	'wp_mail_charset',
+	static function () {
+		return 'UTF-8';
+	}
+);
 
 /**
  * Pages nécessitant pages.css (mise en page contenu / catalogue).

@@ -534,10 +534,17 @@ function anrhpub_enqueue_quote_cart_assets() {
 		$server_cart = anrhpub_get_user_quote_cart_raw();
 	}
 
+	$quote_deps = array( 'anrhpub-charte' );
+	if ( wp_style_is( 'anrhpub-b2b', 'enqueued' ) ) {
+		$quote_deps[] = 'anrhpub-b2b';
+	} elseif ( wp_style_is( 'anrhpub-pages', 'enqueued' ) ) {
+		$quote_deps[] = 'anrhpub-pages';
+	}
+
 	wp_enqueue_style(
 		'anrhpub-quote-cart',
 		ANRHPUB_THEME_URI . '/assets/css/quote-cart.css',
-		array( 'anrhpub-vitrine' ),
+		$quote_deps,
 		ANRHPUB_THEME_VERSION
 	);
 

@@ -29,6 +29,10 @@
   --font-title: "Luciole", Verdana, Geneva, sans-serif;
   --font-accent: "Neulis Neue", "Luciole", Verdana, sans-serif;
 
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
   /* Scrollbars site */
   --scrollbar-size: 8px;
   --scrollbar-track: rgba(130, 74, 121, 0.08);
@@ -116,6 +120,83 @@ a:hover {
   background: var(--color-orange);
   border-color: var(--color-orange);
   color: #fff;
+}
+
+/* Champs de formulaire — style global (contact, compte, facettes, etc.) */
+input[type="text"]:not(.header-search__input):not(.anrhpub-hex-text),
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+input[type="search"]:not(.header-search__input),
+textarea,
+select {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--color-aubergine);
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.site-search input,
+.header-search__input,
+.home-newsletter__input,
+.catalogue-search__input,
+.product-quote__qty-input,
+input[type="checkbox"],
+input[type="radio"],
+input[type="hidden"],
+input[type="submit"],
+input[type="button"],
+input[type="file"] {
+  width: auto;
+}
+
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+input[type="text"]:not(.header-search__input):focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+input[type="search"]:not(.header-search__input):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-orange);
+  box-shadow: 0 0 0 3px rgba(237, 110, 28, 0.12);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background: var(--color-lilas);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.catalogue-facets__form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-prune);
+}
+
+.catalogue-facets__form p {
+  margin: 0 0 0.85rem;
 }
 
 .btn--accent:hover {

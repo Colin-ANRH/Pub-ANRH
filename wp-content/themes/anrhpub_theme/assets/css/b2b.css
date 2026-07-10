@@ -52,7 +52,7 @@
 
 .catalogue-facets__form select {
   width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 0;
 }
 
 .product-card__price-tiers-hint {

@@ -1,3 +1,5 @@
+# Extrait .htaccess PRODUCTION — sans blocage indexation staging
+# Copier dans la racine WordPress à la mise en prod (adapter RewriteBase si sous-dossier).
 
 # Redirection HTTPS
 <IfModule mod_rewrite.c>
@@ -6,13 +8,7 @@ RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
-# UTF-8 par défaut (évite accents cassés sur pages d'erreur / fichiers statiques)
 AddDefaultCharset UTF-8
-
-# Staging : aucune indexation (fichiers statiques inclus) — RETIRER à la mise en production
-<IfModule mod_headers.c>
-Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
-</IfModule>
 
 # BEGIN WordPress
 <IfModule mod_rewrite.c>
