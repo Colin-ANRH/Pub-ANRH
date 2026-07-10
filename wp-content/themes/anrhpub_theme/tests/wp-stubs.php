@@ -7,6 +7,56 @@
 
 declare(strict_types=1);
 
+function add_action( ...$args ) {
+	unset( $args );
+}
+
+function add_filter( ...$args ) {
+	unset( $args );
+}
+
+function remove_action( ...$args ) {
+	unset( $args );
+}
+
+function do_action( ...$args ) {
+	unset( $args );
+}
+
+function apply_filters( $tag, $value, ...$args ) {
+	unset( $tag, $args );
+	return $value;
+}
+
+function register_post_type( ...$args ) {
+	unset( $args );
+	return true;
+}
+
+function register_post_meta( ...$args ) {
+	unset( $args );
+	return true;
+}
+
+function register_meta( ...$args ) {
+	unset( $args );
+	return true;
+}
+
+function register_taxonomy( ...$args ) {
+	unset( $args );
+	return true;
+}
+
+function register_term_meta( ...$args ) {
+	unset( $args );
+	return true;
+}
+
+function sanitize_text_field( $value ) {
+	return is_string( $value ) ? trim( $value ) : '';
+}
+
 function __( $text, $domain = 'default' ) {
 	unset( $domain );
 	return $text;
