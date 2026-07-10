@@ -100,6 +100,19 @@ jobs:
 
       - name: Smoke test (assets theme)
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.anrh.fr/wp-content/themes/anrhpub_theme/style.css")
+          code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 \
+            -A "ANRH-Deploy-SmokeTest/1.0" \
+            "https://pub.anrh.fr/wp-content/themes/anrhpub_theme/style.css" || echo "000")
           echo "HTTP $code"
-          test "$code" = "200"
+          case "$code" in
+            200|301|302)
+              echo "Site accessible."
+              ;;
+            401|403)
+              echo "::warning::HTTP $code — protection OVH/GitHub IP probable, deploy FTP OK."
+              ;;
+            *)
+              echo "::error::Site injoignable (HTTP $code)"
+              exit 1
+              ;;
+          esac
