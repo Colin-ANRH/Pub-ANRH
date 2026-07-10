@@ -3,20 +3,31 @@
 
 $ErrorActionPreference = 'Stop'
 
-$mysql = 'C:\xampp\mysql\bin\mysqldump.exe'
-$db    = 'anrhpub_db'
-$out   = Join-Path (Split-Path $PSScriptRoot -Parent) 'export-pubanrh-ovh.sql'
+$mysql   = 'C:\xampp\mysql\bin\mysqldump.exe'
+$dbLocal = 'anrhpub_db'
+$dbOvh   = 'anrservipubanrh'
+$out     = Join-Path (Split-Path $PSScriptRoot -Parent) 'export-pubanrh-ovh.sql'
 
 if (-not (Test-Path $mysql)) {
     Write-Error "mysqldump introuvable : $mysql (démarrez XAMPP / MySQL)"
 }
 
-Write-Host "Export de $db vers $out ..."
-& $mysql -u root --single-transaction --routines --triggers $db |
+Write-Host "Export de $dbLocal vers $out ..."
+$header = @(
+    "-- Export ANRHPUB staging pour OVH"
+    "-- Base cible phpMyAdmin : $dbOvh"
+    ""
+    "USE ``$dbOvh``;"
+    ""
+)
+
+$header | Set-Content -Path $out -Encoding UTF8
+
+& $mysql -u root --single-transaction --routines --triggers $dbLocal |
     ForEach-Object {
         $_ -replace 'http://localhost:8080/ANRPUB', 'https://pub.anrh.fr' `
            -replace 'http:\\/\\/localhost:8080\\/ANRPUB', 'https:\\/\\/pub.anrh.fr'
     } |
-    Set-Content -Path $out -Encoding UTF8
+    Add-Content -Path $out -Encoding UTF8
 
-Write-Host 'OK - importez ce fichier dans phpMyAdmin (base anrservipubanrh).'
+Write-Host "OK - importez $out dans phpMyAdmin (base $dbOvh)."
