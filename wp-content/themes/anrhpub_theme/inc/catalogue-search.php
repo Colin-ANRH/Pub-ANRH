@@ -7,6 +7,27 @@
 
 defined( 'ABSPATH' ) || exit;
 
+define( 'ANRHPUB_CATALOGUE_SEARCH_MAX_RESULTS', 500 );
+
+/**
+ * Limite de résultats pour une recherche catalogue.
+ *
+ * @return int
+ */
+function anrhpub_catalogue_search_max_results() {
+	return max( 1, (int) apply_filters( 'anrhpub_catalogue_search_max_results', ANRHPUB_CATALOGUE_SEARCH_MAX_RESULTS ) );
+}
+
+/**
+ * Clé transient cache recherche.
+ *
+ * @param string $term Search term.
+ * @return string
+ */
+function anrhpub_catalogue_search_cache_key( $term ) {
+	return 'anrhpub_cat_search_' . md5( mb_strtolower( trim( (string) $term ) ) );
+}
+
 /**
  * Paramètre GET de recherche catalogue.
  *
@@ -81,6 +102,13 @@ function anrhpub_catalogue_search_product_ids( $term ) {
 		return array();
 	}
 
+	$cache_key = anrhpub_catalogue_search_cache_key( $term );
+	$cached    = get_transient( $cache_key );
+	if ( is_array( $cached ) ) {
+		return $cached;
+	}
+
+	$max = anrhpub_catalogue_search_max_results();
 	$ids = array();
 
 	$by_text = new WP_Query(
@@ -88,7 +116,7 @@ function anrhpub_catalogue_search_product_ids( $term ) {
 			'post_type'              => 'anr_product',
 			'post_status'            => 'publish',
 			's'                      => $term,
-			'posts_per_page'         => -1,
+			'posts_per_page'         => $max,
 			'fields'                 => 'ids',
 			'no_found_rows'          => true,
 			'update_post_meta_cache' => false,
@@ -103,7 +131,7 @@ function anrhpub_catalogue_search_product_ids( $term ) {
 		array(
 			'post_type'              => 'anr_product',
 			'post_status'            => 'publish',
-			'posts_per_page'         => -1,
+			'posts_per_page'         => $max,
 			'fields'                 => 'ids',
 			'no_found_rows'          => true,
 			'update_post_meta_cache' => false,
@@ -121,12 +149,13 @@ function anrhpub_catalogue_search_product_ids( $term ) {
 		$ids = array_merge( $ids, $by_ref->posts );
 	}
 
-	foreach ( anrhpub_catalogue_search_matching_categories( $term ) as $cat ) {
+	$category_ids = wp_list_pluck( anrhpub_catalogue_search_matching_categories( $term ), 'term_id' );
+	if ( ! empty( $category_ids ) ) {
 		$by_cat = new WP_Query(
 			array(
 				'post_type'              => 'anr_product',
 				'post_status'            => 'publish',
-				'posts_per_page'         => -1,
+				'posts_per_page'         => $max,
 				'fields'                 => 'ids',
 				'no_found_rows'          => true,
 				'update_post_meta_cache' => false,
@@ -135,7 +164,7 @@ function anrhpub_catalogue_search_product_ids( $term ) {
 					array(
 						'taxonomy'         => 'anr_category',
 						'field'            => 'term_id',
-						'terms'            => (int) $cat->term_id,
+						'terms'            => array_map( 'intval', $category_ids ),
 						'include_children' => true,
 					),
 				),
@@ -146,7 +175,14 @@ function anrhpub_catalogue_search_product_ids( $term ) {
 		}
 	}
 
-	return array_values( array_unique( array_map( 'intval', $ids ) ) );
+	$ids = array_values( array_unique( array_map( 'intval', $ids ) ) );
+	if ( count( $ids ) > $max ) {
+		$ids = array_slice( $ids, 0, $max );
+	}
+
+	set_transient( $cache_key, $ids, 5 * MINUTE_IN_SECONDS );
+
+	return $ids;
 }
 
 /**
@@ -250,11 +286,14 @@ function anrhpub_catalogue_search_suggest_payload( $term, $limit = 8 ) {
 		return array(
 			'products'   => array(),
 			'categories' => array(),
+			'total'      => 0,
 		);
 	}
 
 	$limit   = max( 1, min( 12, (int) $limit ) );
-	$ids     = array_slice( anrhpub_catalogue_search_product_ids( $term ), 0, $limit );
+	$ids     = anrhpub_catalogue_search_product_ids( $term );
+	$total   = count( $ids );
+	$ids     = array_slice( $ids, 0, $limit );
 	$products = array();
 
 	foreach ( $ids as $post_id ) {
@@ -286,6 +325,7 @@ function anrhpub_catalogue_search_suggest_payload( $term, $limit = 8 ) {
 	return array(
 		'products'   => $products,
 		'categories' => $categories,
+		'total'      => $total,
 	);
 }
 
@@ -296,13 +336,14 @@ function anrhpub_ajax_catalogue_search_suggest() {
 	check_ajax_referer( 'anrhpub_product_search', 'nonce' );
 
 	$term = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['q'] ) ) : '';
+	$payload = anrhpub_catalogue_search_suggest_payload( $term );
 
 	wp_send_json_success(
 		array_merge(
-			anrhpub_catalogue_search_suggest_payload( $term ),
+			$payload,
 			array(
 				'catalogue_url' => anrhpub_catalogue_search_url( $term ),
-				'count'         => count( anrhpub_catalogue_search_product_ids( $term ) ),
+				'count'         => (int) ( $payload['total'] ?? count( $payload['products'] ) ),
 			)
 		)
 	);

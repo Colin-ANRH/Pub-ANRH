@@ -24,6 +24,24 @@ C_TEXT = (25, 30, 35)
 C_ACTION = (0, 70, 120)
 C_MUTED = (90, 95, 100)
 
+RESOLVED_QUALITY = [
+    ("tests/ + composer.json", "Aucun test automatisé.", "PHPUnit : auth B2B, panier devis, PDF devis (CI)."),
+    ("assets/js/src/ + Vite", "Monolithe main.js 2700+ lignes.", "14 modules ES + build Vite (fallback Python)."),
+    ("functions.php", "10+ CSS sur toutes les pages.", "Enqueue conditionnel : vitrine, pages, B2B par contexte."),
+    ("inc/catalogue-search.php", "Requêtes illimitées par recherche.", "Limite 500 résultats, requête catégories groupée, cache transient."),
+    ("inc/product-colors/", "God-module 1200+ lignes.", "Scindé en taxonomy, admin-term, admin-product, frontend."),
+    ("inc/demo-data.php", "Données démo au switch thème.", "Désactivé hors local/development (WP_ENVIRONMENT_TYPE)."),
+]
+
+RESOLVED_SECURITY = [
+    ("inc/b2b/pricing.php", "Calcul prix HT sans gate centralisé.", "anrhpub_is_price_visible_context() intégré dans get_unit_price_ht()."),
+    ("inc/b2b/client-pro.php", "Compte sans meta = approuvé par défaut.", "Statut pending par défaut + migration comptes existants."),
+    ("inc/contact-form.php", "Formulaire devis sans rate limiting ni CAPTCHA.", "Throttling IP + captcha arithmétique."),
+    ("inc/newsletter.php", "Inscription AJAX sans limitation.", "Rate limit par IP et par e-mail."),
+    ("inc/b2b/quotes.php", "PDF devis : capability edit_posts trop large.", "Accès restreint via edit_post sur le devis."),
+    ("inc/gdpr.php", "Bandeau cookies sans blocage scripts.", "CMP minimal : blocage scripts analytics + activation au consentement."),
+]
+
 RESOLVED_CRITICAL = [
     ("bin/reset-client-access.php", "Mots de passe en dur dans le dépôt.", "Mots de passe générés via CLI/env — plus de secrets commités."),
     ("tools/migrate-prestashop.php", "Script migration accessible via HTTP.", "Exécution CLI uniquement (HTTP 403)."),
@@ -34,28 +52,6 @@ RESOLVED_CRITICAL = [
 ]
 
 SECTIONS = [
-    {
-        "title": "Sécurité applicative (restant)",
-        "items": [
-            ("Élevé", "inc/b2b/pricing.php", "Calcul prix HT sans gate centralisé.", "Ajouter anrhpub_can_view_prices() dans get_unit_price_ht pour les appels front."),
-            ("Élevé", "inc/b2b/client-pro.php", "Compte sans meta = approuvé par défaut.", "Statut pending par défaut pour les nouveaux comptes."),
-            ("Élevé", "inc/contact-form.php", "Formulaire devis sans rate limiting.", "Throttling IP + CAPTCHA."),
-            ("Élevé", "inc/newsletter.php", "Inscription AJAX sans limitation.", "Rate limit par IP/email."),
-            ("Moyen", "inc/b2b/quotes.php", "PDF devis : capability edit_posts trop large.", "Restreindre aux rôles dédiés."),
-            ("Moyen", "inc/gdpr.php", "Bandeau cookies sans blocage scripts.", "Intégrer un CMP."),
-        ],
-    },
-    {
-        "title": "Qualité de code et architecture",
-        "items": [
-            ("Élevé", "Thème entier", "Aucun test automatisé.", "PHPUnit sur auth B2B, panier, devis."),
-            ("Élevé", "assets/js/main.js", "Monolithe 2700+ lignes.", "Découper + build Vite."),
-            ("Élevé", "functions.php", "10+ CSS sur toutes les pages.", "Enqueue conditionnel par template."),
-            ("Élevé", "inc/catalogue-search.php", "Requêtes illimitées par recherche.", "Pagination / index."),
-            ("Moyen", "inc/product-colors.php", "God-module 1200+ lignes.", "Scinder en modules."),
-            ("Moyen", "inc/demo-data.php", "Données démo au switch thème.", "Désactiver en production."),
-        ],
-    },
     {
         "title": "Déploiement et infrastructure",
         "items": [
@@ -81,14 +77,11 @@ PRIORITY = [
     ("P1 — Important", [
         "Sels WordPress uniques par environnement",
         "Export DB avec wp search-replace (serialized-safe)",
-        "Rate limiting sur les formulaires publics",
-        "Tests B2B minimaux en CI",
     ]),
     ("P2 — Amélioration", [
-        "Découper main.js et product-colors.php",
-        "CSS/JS conditionnels par page",
         "Retirer staging-health du deploy automatique",
         "Réduire le scope git (core WP hors repo)",
+        "Étendre la couverture PHPUnit (intégration WP)",
     ]),
     ("P3 — Confort", [
         "Audit accessibilité WCAG 2.1 AA",
@@ -227,7 +220,7 @@ def main() -> None:
     pdf.cell(0, 8, "6 dettes CRITIQUES corrigées", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(210, 225, 240)
-    pdf.cell(0, 7, "Voir section 1 — Correctifs appliqués", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 7, "6 SÉCURITÉ + 6 QUALITÉ corrigées — sections 1 à 3", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # Correctifs
     pdf.add_page()
@@ -245,9 +238,42 @@ def main() -> None:
     for i, (path, problem, action) in enumerate(RESOLVED_CRITICAL, 1):
         write_item(pdf, i, "RÉSOLU", path, problem, action)
 
+    # Sécurité applicative
+    pdf.add_page()
+    pdf.header_bar("2. Sécurité applicative — corrigée")
+    pdf.set_font("Arial", "", 9.5)
+    pdf.set_text_color(*C_TEXT)
+    pdf.multi_cell(
+        CONTENT_W,
+        5,
+        "Les 6 points de la section « Sécurité applicative (restant) » ont été corrigés le "
+        + date.today().strftime("%d/%m/%Y")
+        + ".",
+    )
+    pdf.ln(4)
+    for i, (path, problem, action) in enumerate(RESOLVED_SECURITY, len(RESOLVED_CRITICAL) + 1):
+        write_item(pdf, i, "RÉSOLU", path, problem, action)
+
+    # Qualité de code
+    pdf.add_page()
+    pdf.header_bar("3. Qualité de code et architecture — corrigée")
+    pdf.set_font("Arial", "", 9.5)
+    pdf.set_text_color(*C_TEXT)
+    pdf.multi_cell(
+        CONTENT_W,
+        5,
+        "Les 6 points de la section « Qualité de code et architecture » ont été corrigés le "
+        + date.today().strftime("%d/%m/%Y")
+        + ".",
+    )
+    pdf.ln(4)
+    base = len(RESOLVED_CRITICAL) + len(RESOLVED_SECURITY)
+    for i, (path, problem, action) in enumerate(RESOLVED_QUALITY, base + 1):
+        write_item(pdf, i, "RÉSOLU", path, problem, action)
+
     # Restant
     item_no = 1
-    sec_num = 2
+    sec_num = 4
     for section in SECTIONS:
         pdf.add_page()
         pdf.header_bar(f"{sec_num}. {section['title']}")

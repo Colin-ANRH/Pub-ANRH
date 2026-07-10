@@ -66,6 +66,30 @@ function anrhpub_get_product_price_tiers( $post_id = 0 ) {
 }
 
 /**
+ * Le contexte courant autorise-t-il l’exposition des prix HT ?
+ *
+ * @param int $user_id User ID client (0 = session courante).
+ * @return bool
+ */
+function anrhpub_is_price_visible_context( $user_id = 0 ) {
+	if ( apply_filters( 'anrhpub_bypass_price_gate', false, $user_id ) ) {
+		return true;
+	}
+
+	if ( is_admin() && ! wp_doing_ajax() && current_user_can( 'edit_posts' ) ) {
+		return true;
+	}
+
+	if ( is_user_logged_in() && current_user_can( 'manage_options' ) ) {
+		return true;
+	}
+
+	$user_id = $user_id ? (int) $user_id : anrhpub_get_client_user_id();
+
+	return anrhpub_client_is_approved( $user_id );
+}
+
+/**
  * Prix HT unitaire pour une quantité.
  *
  * @param int $post_id Post ID.
@@ -77,6 +101,10 @@ function anrhpub_get_unit_price_ht( $post_id, $qty = 1, $user_id = 0 ) {
 	$post_id = (int) $post_id;
 	$qty     = max( 1, (int) $qty );
 	$user_id = $user_id ? (int) $user_id : anrhpub_get_client_user_id();
+
+	if ( ! anrhpub_is_price_visible_context( $user_id ) ) {
+		return null;
+	}
 
 	$client_prices = array();
 	if ( $user_id > 0 ) {

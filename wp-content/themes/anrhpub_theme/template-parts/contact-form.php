@@ -128,6 +128,14 @@ $is_devis = ! empty( $defaults['is_devis'] );
 			<textarea name="contact_message" id="contact_message" rows="12" required data-contact-message><?php echo esc_textarea( $defaults['message'] ?? '' ); ?></textarea>
 		</p>
 
+		<?php if ( ! empty( $defaults['captcha_token'] ) && ! empty( $defaults['captcha_label'] ) ) : ?>
+			<p class="account-form__field">
+				<label for="contact_captcha_answer"><?php echo esc_html( $defaults['captcha_label'] ); ?> <span class="required">*</span></label>
+				<input type="number" name="contact_captcha_answer" id="contact_captcha_answer" inputmode="numeric" required autocomplete="off" />
+				<input type="hidden" name="contact_captcha_token" value="<?php echo esc_attr( $defaults['captcha_token'] ); ?>" />
+			</p>
+		<?php endif; ?>
+
 		<p class="account-form__actions">
 			<button type="submit" class="btn btn--primary btn--lg">
 				<?php echo $is_devis ? esc_html__( 'Envoyer la demande de devis', 'anrhpub_theme' ) : esc_html__( 'Envoyer le message', 'anrhpub_theme' ); ?>

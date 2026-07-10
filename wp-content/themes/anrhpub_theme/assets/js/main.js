@@ -1,7 +1,9 @@
 (function () {
   'use strict';
 
-  function initPageLoader() {
+const MOBILE_BP = 992;
+
+function initPageLoader() {
     var loader = document.getElementById('page-loader');
     var root = document.documentElement;
 
@@ -53,13 +55,10 @@
     });
   }
 
-  initPageLoader();
-
-  var header = document.getElementById('site-header');
+var header = document.getElementById('site-header');
   var toggle = document.getElementById('nav-toggle');
   var nav = document.getElementById('site-nav');
   var backdrop = document.getElementById('nav-backdrop');
-  var MOBILE_BP = 992;
   var megaDesktopBound = false;
 
   function isMobile() {
@@ -274,9 +273,6 @@
   }
   syncHeaderHeight();
 
-  initDropdowns();
-  initAccountMenu();
-  initMegaMenu();
 
   function initMegaMenu() {
     var megaItem = document.querySelector('.menu-item--mega');
@@ -345,8 +341,13 @@
     });
   }
 
+function bootstrapNavigation() {
+  initDropdowns();
+  initAccountMenu();
+  initMegaMenu();
+}
 
-  function initScrollAnimations() {
+function initScrollAnimations() {
     var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var animated = document.querySelectorAll('[data-animate]');
 
@@ -389,7 +390,7 @@
     });
   }
 
-  function initCatalogueFilters() {
+function initCatalogueFilters() {
     var root = document.querySelector('.catalogue-filters--accordion');
     if (!root || root.dataset.accordionBound === '1') {
       return;
@@ -411,7 +412,7 @@
     });
   }
 
-  function initCatalogueLive() {
+function initCatalogueLive() {
     var page = document.querySelector('.catalogue-page');
     var results = document.getElementById('catalogue-results');
     var hero = document.getElementById('catalogue-hero');
@@ -618,7 +619,7 @@
     syncSearchInputFromUrl(window.location.href);
   }
 
-  function initGlobalProductSearch() {
+function initGlobalProductSearch() {
     var cfg = window.anrhpubProductSearch;
     var root = document.querySelector('[data-global-product-search]');
     var input = document.getElementById('global-catalogue-search');
@@ -872,7 +873,7 @@
     }
   }
 
-  function anrhpubPlainToastMessage(message) {
+function anrhpubPlainToastMessage(message) {
     if (!message) {
       return '';
     }
@@ -935,8 +936,9 @@
   }
 
   window.anrhpubShowToast = anrhpubShowToast;
+window.anrhpubShowToast = anrhpubShowToast;
 
-  function initAccountToasts() {
+function initAccountToasts() {
     var cfg = window.anrhpubAccount;
     if (!cfg) {
       return;
@@ -1153,7 +1155,7 @@
     });
   }
 
-  function initProductGallery() {
+function initProductGallery() {
     document.querySelectorAll('[data-product-gallery]').forEach(function (gallery) {
       var main = gallery.querySelector('[data-gallery-main]');
       var thumbs = gallery.querySelectorAll('[data-gallery-thumb]');
@@ -1213,7 +1215,7 @@
     });
   }
 
-  function initQuoteCart() {
+function initQuoteCart() {
     var cfg = window.anrhpubQuoteCart;
     if (!cfg) {
       return;
@@ -2125,7 +2127,7 @@
     });
   }
 
-  function initAutoCarousel(root, options) {
+function initAutoCarousel(root, options) {
     if (!root) {
       return;
     }
@@ -2257,7 +2259,7 @@
     });
   }
 
-  function initNewsletter() {
+function initNewsletter() {
     var form = document.querySelector('[data-newsletter-form]');
     var cfg = window.anrhpubNewsletter;
 
@@ -2336,7 +2338,7 @@
     });
   }
 
-  function initB2b() {
+function initB2b() {
     var cfg = window.anrhpubB2b || {};
     var compareKey = cfg.compareKey || 'anrhpub_compare';
 
@@ -2613,14 +2615,40 @@
     }
 
     var banner = document.getElementById('anr-cookie-banner');
+
+    function activateAnalyticsScripts() {
+      document.querySelectorAll('script[type="text/plain"][data-anr-consent="analytics"]').forEach(function (node) {
+        var script = document.createElement('script');
+        var src = node.getAttribute('src');
+        if (src) {
+          script.src = src;
+        } else {
+          script.textContent = node.textContent;
+        }
+        node.parentNode.replaceChild(script, node);
+      });
+    }
+
+    function setCookieConsent(mode) {
+      document.cookie = 'anrhpub_cookie_consent_v1=' + mode + ';path=/;max-age=31536000;SameSite=Lax';
+      window.anrhpubConsent = { analytics: mode === 'all' };
+      if (mode === 'all') {
+        activateAnalyticsScripts();
+      }
+    }
+
+    if (window.anrhpubConsent && window.anrhpubConsent.analytics) {
+      activateAnalyticsScripts();
+    }
+
     if (banner && !document.cookie.match(/anrhpub_cookie_consent_v1=/)) {
       banner.hidden = false;
       banner.querySelector('[data-cookie-accept]')?.addEventListener('click', function () {
-        document.cookie = 'anrhpub_cookie_consent_v1=1;path=/;max-age=31536000;SameSite=Lax';
+        setCookieConsent('all');
         banner.hidden = true;
       });
       banner.querySelector('[data-cookie-reject]')?.addEventListener('click', function () {
-        document.cookie = 'anrhpub_cookie_consent_v1=0;path=/;max-age=31536000;SameSite=Lax';
+        setCookieConsent('essential');
         banner.hidden = true;
       });
     } else if (banner) {
@@ -2667,27 +2695,32 @@
     }
   }
 
-  function initAll() {
-    initScrollAnimations();
-    initHomeSlider();
-    initHomeSpotlight();
-    initTrustMarquee();
-    initNewsletter();
-    initCatalogueFilters();
-    initCatalogueLive();
-    initGlobalProductSearch();
-    initAccountToasts();
-    initAccountTabs();
-    initAccountFavorites();
-    initProductGallery();
-    initProductTabs();
-    initQuoteCart();
-    initB2b();
-  }
+initPageLoader();
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAll);
-  } else {
-    initAll();
-  }
+bootstrapNavigation();
+
+
+function initAll() {
+  initScrollAnimations();
+  initHomeSlider();
+  initHomeSpotlight();
+  initTrustMarquee();
+  initNewsletter();
+  initCatalogueFilters();
+  initCatalogueLive();
+  initGlobalProductSearch();
+  initAccountToasts();
+  initAccountTabs();
+  initAccountFavorites();
+  initProductGallery();
+  initProductTabs();
+  initQuoteCart();
+  initB2b();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAll);
+} else {
+  initAll();
+}
 })();

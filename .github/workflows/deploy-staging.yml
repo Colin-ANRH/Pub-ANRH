@@ -43,6 +43,23 @@ jobs:
           STAGING_GATE_PASSWORD: ci-password
         run: php deploy-ovh/build-wp-config.php
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build JS theme (Vite)
+        working-directory: wp-content/themes/anrhpub_theme
+        run: |
+          npm install
+          npm run build || python bin/build-main-js.py
+
+      - name: PHPUnit (B2B, panier, devis)
+        working-directory: wp-content/themes/anrhpub_theme
+        run: |
+          composer install --no-interaction --prefer-dist
+          composer test
+
   deploy:
     needs: validate
     runs-on: ubuntu-latest
@@ -52,12 +69,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Préparer le bundle de déploiement
         env:
           OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
           STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
           STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
         run: |
+          cd wp-content/themes/anrhpub_theme
+          npm install
+          npm run build || python bin/build-main-js.py
+          cd ../../..
           php deploy-ovh/build-wp-config.php
           mkdir -p deploy-bundle/wp-content/themes
           mkdir -p deploy-bundle/wp-content/mu-plugins
@@ -74,7 +100,7 @@ jobs:
             theme_name=$(basename "$theme_dir")
             mkdir -p "deploy-bundle/wp-content/themes/$theme_name"
             if [ "$theme_name" = "anrhpub_theme" ]; then
-              rsync -a --exclude='bin/' --exclude='tools/' "${theme_dir}/" "deploy-bundle/wp-content/themes/$theme_name/"
+              rsync -a --exclude='bin/' --exclude='tools/' --exclude='tests/' --exclude='vendor/' --exclude='node_modules/' "${theme_dir}/" "deploy-bundle/wp-content/themes/$theme_name/"
             else
               cp -r "${theme_dir}." "deploy-bundle/wp-content/themes/$theme_name/"
             fi

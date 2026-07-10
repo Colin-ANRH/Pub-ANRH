@@ -8,9 +8,29 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * Données démo autorisées (local / dev uniquement).
+ *
+ * @return bool
+ */
+function anrhpub_demo_data_enabled() {
+	if ( defined( 'ANRHPUB_DEMO_DATA' ) ) {
+		return (bool) ANRHPUB_DEMO_DATA;
+	}
+
+	if ( function_exists( 'wp_get_environment_type' ) ) {
+		return in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
+	}
+
+	return false;
+}
+
+/**
  * Seed demo products and pages.
  */
 function anrhpub_seed_demo_data() {
+	if ( ! anrhpub_demo_data_enabled() ) {
+		return;
+	}
 	$term_ids = anrhpub_install_categories();
 
 	$products = array(
@@ -272,7 +292,9 @@ function anrhpub_seed_demo_data() {
  * Run seed on theme switch.
  */
 function anrhpub_after_switch_theme() {
-	anrhpub_seed_demo_data();
+	if ( anrhpub_demo_data_enabled() ) {
+		anrhpub_seed_demo_data();
+	}
 
 	$front = get_page_by_path( 'accueil' );
 	if ( ! $front ) {
@@ -454,6 +476,10 @@ function anrhpub_insert_demo_product( $product, $term_ids ) {
  * Installe les produits nouveautés de test (une fois).
  */
 function anrhpub_ensure_nouveaute_demo_products() {
+	if ( ! anrhpub_demo_data_enabled() ) {
+		return;
+	}
+
 	$term_ids = array();
 	if ( function_exists( 'anrhpub_install_categories' ) ) {
 		$term_ids = anrhpub_install_categories();

@@ -11,6 +11,30 @@ define( 'ANRHPUB_PRIVACY_PAGE_SLUG', 'politique-confidentialite' );
 define( 'ANRHPUB_COOKIE_CONSENT_OPTION', 'anrhpub_cookie_consent_v1' );
 
 /**
+ * Valeur du cookie de consentement.
+ *
+ * @return string essential|all|0|1|''
+ */
+function anrhpub_get_cookie_consent_value() {
+	if ( ! isset( $_COOKIE[ ANRHPUB_COOKIE_CONSENT_OPTION ] ) ) {
+		return '';
+	}
+
+	return sanitize_key( wp_unslash( (string) $_COOKIE[ ANRHPUB_COOKIE_CONSENT_OPTION ] ) );
+}
+
+/**
+ * Consentement cookies analytics / mesure d’audience ?
+ *
+ * @return bool
+ */
+function anrhpub_has_analytics_consent() {
+	$value = anrhpub_get_cookie_consent_value();
+
+	return in_array( $value, array( 'all', '1' ), true );
+}
+
+/**
  * Crée la page confidentialité.
  */
 function anrhpub_ensure_privacy_page() {
@@ -55,21 +79,69 @@ function anrhpub_privacy_url() {
 }
 
 /**
+ * Expose l’état consentement au JS (avant autres scripts).
+ */
+function anrhpub_enqueue_cookie_consent_bootstrap() {
+	if ( is_admin() ) {
+		return;
+	}
+
+	wp_register_script( 'anrhpub-consent-bootstrap', false, array(), ANRHPUB_THEME_VERSION, false );
+	wp_enqueue_script( 'anrhpub-consent-bootstrap' );
+	wp_add_inline_script(
+		'anrhpub-consent-bootstrap',
+		'window.anrhpubConsent=' . wp_json_encode(
+			array(
+				'analytics' => anrhpub_has_analytics_consent(),
+			)
+		) . ';',
+		'before'
+	);
+}
+add_action( 'wp_enqueue_scripts', 'anrhpub_enqueue_cookie_consent_bootstrap', 1 );
+
+/**
+ * Bloque les scripts analytics tant que le consentement n’est pas donné.
+ *
+ * @param string $tag    Tag script.
+ * @param string $handle Handle.
+ * @param string $src    URL.
+ * @return string
+ */
+function anrhpub_block_scripts_without_consent( $tag, $handle, $src ) {
+	if ( anrhpub_has_analytics_consent() ) {
+		return $tag;
+	}
+
+	$blocked = apply_filters(
+		'anrhpub_consent_required_script_handles',
+		array( 'google-analytics', 'gtag', 'facebook-pixel', 'hotjar' )
+	);
+
+	if ( in_array( $handle, $blocked, true ) ) {
+		return str_replace( '<script ', '<script type="text/plain" data-anr-consent="analytics" ', $tag );
+	}
+
+	return $tag;
+}
+add_filter( 'script_loader_tag', 'anrhpub_block_scripts_without_consent', 10, 3 );
+
+/**
  * Bandeau cookies.
  */
 function anrhpub_render_cookie_banner() {
-	if ( is_admin() || isset( $_COOKIE[ ANRHPUB_COOKIE_CONSENT_OPTION ] ) ) {
+	if ( is_admin() || anrhpub_get_cookie_consent_value() !== '' ) {
 		return;
 	}
 	?>
-	<div class="anr-cookie-banner" id="anr-cookie-banner" role="dialog" aria-live="polite" aria-label="<?php esc_attr_e( 'Cookies', 'anrhpub_theme' ); ?>">
+	<div class="anr-cookie-banner" id="anr-cookie-banner" role="dialog" aria-live="polite" aria-label="<?php esc_attr_e( 'Cookies', 'anrhpub_theme' ); ?>" hidden>
 		<div class="container anr-cookie-banner__inner">
-			<p><?php esc_html_e( 'Nous utilisons des cookies pour le fonctionnement du site et, si vous acceptez, la mesure d’audience.', 'anrhpub_theme' ); ?>
+			<p><?php esc_html_e( 'Nous utilisons des cookies essentiels au fonctionnement du site. Les cookies de mesure d’audience ne sont déposés qu’avec votre accord.', 'anrhpub_theme' ); ?>
 				<a href="<?php echo esc_url( anrhpub_privacy_url() ); ?>"><?php esc_html_e( 'Politique de confidentialité', 'anrhpub_theme' ); ?></a>
 			</p>
 			<div class="anr-cookie-banner__actions">
-				<button type="button" class="btn btn--outline btn--sm" data-cookie-reject><?php esc_html_e( 'Refuser', 'anrhpub_theme' ); ?></button>
-				<button type="button" class="btn btn--primary btn--sm" data-cookie-accept><?php esc_html_e( 'Accepter', 'anrhpub_theme' ); ?></button>
+				<button type="button" class="btn btn--outline btn--sm" data-cookie-reject><?php esc_html_e( 'Refuser les cookies analytics', 'anrhpub_theme' ); ?></button>
+				<button type="button" class="btn btn--primary btn--sm" data-cookie-accept><?php esc_html_e( 'Tout accepter', 'anrhpub_theme' ); ?></button>
 			</div>
 		</div>
 	</div>
@@ -84,5 +156,5 @@ add_action( 'wp_footer', 'anrhpub_render_cookie_banner', 5 );
  */
 function anrhpub_newsletter_store_consent_meta( $post_id ) {
 	update_post_meta( $post_id, 'anr_newsletter_consent_at', current_time( 'mysql' ) );
-	update_post_meta( $post_id, 'anr_newsletter_consent_ip', isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
+	update_post_meta( $post_id, 'anr_newsletter_consent_ip', anrhpub_get_request_ip() );
 }

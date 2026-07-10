@@ -313,6 +313,12 @@ function anrhpub_get_contact_form_defaults() {
 		$defaults['message'] = anrhpub_build_devis_contact_message( $client_id );
 	}
 
+	if ( function_exists( 'anrhpub_create_form_captcha' ) ) {
+		$captcha                    = anrhpub_create_form_captcha( 'contact' );
+		$defaults['captcha_token']  = $captcha['token'];
+		$defaults['captcha_label']  = $captcha['label'];
+	}
+
 	return $defaults;
 }
 
@@ -333,6 +339,19 @@ function anrhpub_handle_contact_form() {
 	}
 
 	check_admin_referer( 'anrhpub_contact_form' );
+
+	if ( function_exists( 'anrhpub_rate_limit_exceeded' ) && anrhpub_rate_limit_exceeded( 'contact_form', 5, 15 * MINUTE_IN_SECONDS ) ) {
+		$GLOBALS['anrhpub_contact_error'] = __( 'Trop de demandes envoyées. Réessayez dans quelques minutes.', 'anrhpub_theme' );
+		return;
+	}
+
+	$captcha_token  = isset( $_POST['contact_captcha_token'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_captcha_token'] ) ) : '';
+	$captcha_answer = isset( $_POST['contact_captcha_answer'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_captcha_answer'] ) ) : '';
+
+	if ( ! function_exists( 'anrhpub_verify_form_captcha' ) || ! anrhpub_verify_form_captcha( 'contact', $captcha_token, $captcha_answer ) ) {
+		$GLOBALS['anrhpub_contact_error'] = __( 'Vérification anti-spam incorrecte. Réessayez.', 'anrhpub_theme' );
+		return;
+	}
 
 	$name    = isset( $_POST['contact_name'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_name'] ) ) : '';
 	$email   = isset( $_POST['contact_email'] ) ? sanitize_email( wp_unslash( $_POST['contact_email'] ) ) : '';

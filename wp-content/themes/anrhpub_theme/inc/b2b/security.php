@@ -12,6 +12,118 @@ define( 'ANRHPUB_AUDIT_LOG_OPTION', 'anrhpub_audit_log' );
 define( 'ANRHPUB_MAX_LOGIN_ATTEMPTS', 5 );
 define( 'ANRHPUB_LOCKOUT_MINUTES', 15 );
 
+function anrhpub_get_request_ip() {
+	return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
+}
+
+/**
+ * Limite le débit par IP (formulaires publics).
+ *
+ * @param string $bucket  Identifiant action.
+ * @param int    $limit   Nombre max de requêtes.
+ * @param int    $window  Fenêtre en secondes.
+ * @return bool True si limite atteinte.
+ */
+function anrhpub_rate_limit_exceeded( $bucket, $limit = 5, $window = 900 ) {
+	$key   = 'anr_rl_' . md5( $bucket . '|' . anrhpub_get_request_ip() );
+	$count = (int) get_transient( $key );
+
+	if ( $count >= $limit ) {
+		return true;
+	}
+
+	set_transient( $key, $count + 1, $window );
+
+	return false;
+}
+
+/**
+ * Limite le débit par e-mail (newsletter, etc.).
+ *
+ * @param string $bucket Identifiant action.
+ * @param string $email  E-mail.
+ * @param int    $limit  Max.
+ * @param int    $window Fenêtre.
+ * @return bool
+ */
+function anrhpub_rate_limit_exceeded_for_email( $bucket, $email, $limit = 3, $window = 3600 ) {
+	$email = sanitize_email( $email );
+
+	if ( ! is_email( $email ) ) {
+		return true;
+	}
+
+	$key   = 'anr_rl_' . md5( $bucket . '|' . strtolower( $email ) );
+	$count = (int) get_transient( $key );
+
+	if ( $count >= $limit ) {
+		return true;
+	}
+
+	set_transient( $key, $count + 1, $window );
+
+	return false;
+}
+
+/**
+ * Génère un captcha arithmétique simple.
+ *
+ * @param string $context Contexte (contact, newsletter…).
+ * @return array{token: string, label: string}
+ */
+function anrhpub_create_form_captcha( $context = 'contact' ) {
+	$a      = wp_rand( 2, 9 );
+	$b      = wp_rand( 2, 9 );
+	$token  = wp_generate_password( 12, false, false );
+	$answer = $a + $b;
+
+	set_transient(
+		'anr_captcha_' . sanitize_key( $context ) . '_' . $token,
+		array(
+			'answer' => $answer,
+			'ip'     => anrhpub_get_request_ip(),
+		),
+		20 * MINUTE_IN_SECONDS
+	);
+
+	return array(
+		'token' => $token,
+		'label' => sprintf(
+			/* translators: 1: number, 2: number */
+			__( 'Combien font %1$d + %2$d ?', 'anrhpub_theme' ),
+			$a,
+			$b
+		),
+	);
+}
+
+/**
+ * Vérifie la réponse captcha.
+ *
+ * @param string $context Contexte.
+ * @param string $token   Token.
+ * @param mixed  $answer  Réponse utilisateur.
+ * @return bool
+ */
+function anrhpub_verify_form_captcha( $context, $token, $answer ) {
+	$context = sanitize_key( $context );
+	$token   = sanitize_text_field( (string) $token );
+	$key     = 'anr_captcha_' . $context . '_' . $token;
+	$stored  = get_transient( $key );
+
+	delete_transient( $key );
+
+	if ( ! is_array( $stored ) ) {
+		return false;
+	}
+
+	if ( (string) ( $stored['ip'] ?? '' ) !== anrhpub_get_request_ip() ) {
+		return false;
+	}
+
+	return (int) $answer === (int) ( $stored['answer'] ?? -1 );
+}
+
 /**
  * Journal d’audit.
  *

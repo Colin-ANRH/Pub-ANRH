@@ -272,6 +272,13 @@ function anrhpub_ajax_newsletter_subscribe() {
 		wp_send_json_error( array( 'message' => __( 'Requête refusée.', 'anrhpub_theme' ) ), 400 );
 	}
 
+	if ( function_exists( 'anrhpub_rate_limit_exceeded' ) && anrhpub_rate_limit_exceeded( 'newsletter_ip', 10, 15 * MINUTE_IN_SECONDS ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'Trop de tentatives. Réessayez dans quelques minutes.', 'anrhpub_theme' ) ),
+			429
+		);
+	}
+
 	$email   = isset( $_POST['newsletter_email'] ) ? sanitize_email( wp_unslash( $_POST['newsletter_email'] ) ) : '';
 	$consent = ! empty( $_POST['newsletter_consent'] );
 
@@ -279,6 +286,13 @@ function anrhpub_ajax_newsletter_subscribe() {
 		wp_send_json_error(
 			array( 'message' => anrhpub_newsletter_user_message( 'consent_required' ) ),
 			400
+		);
+	}
+
+	if ( function_exists( 'anrhpub_rate_limit_exceeded_for_email' ) && anrhpub_rate_limit_exceeded_for_email( 'newsletter_email', $email, 3, HOUR_IN_SECONDS ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'Cette adresse a déjà été utilisée récemment. Réessayez plus tard.', 'anrhpub_theme' ) ),
+			429
 		);
 	}
 

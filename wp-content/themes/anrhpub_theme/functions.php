@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_THEME_VERSION', '2.35.1' );
+define( 'ANRHPUB_THEME_VERSION', '2.36.0' );
 define( 'ANRHPUB_THEME_DIR', get_template_directory() );
 define( 'ANRHPUB_THEME_URI', get_template_directory_uri() );
 
@@ -83,6 +83,36 @@ function anrhpub_theme_setup() {
 add_action( 'after_setup_theme', 'anrhpub_theme_setup' );
 
 /**
+ * Pages nécessitant pages.css (mise en page contenu / catalogue).
+ *
+ * @return bool
+ */
+function anrhpub_needs_pages_css() {
+	return is_front_page()
+		|| is_singular( 'anr_product' )
+		|| is_post_type_archive( 'anr_product' )
+		|| is_tax( 'anr_category' )
+		|| is_page();
+}
+
+/**
+ * Pages nécessitant b2b.css (compte client, panier devis, fiche produit).
+ *
+ * @return bool
+ */
+function anrhpub_needs_b2b_css() {
+	if ( is_singular( 'anr_product' ) ) {
+		return true;
+	}
+
+	if ( is_page( array( 'mon-compte', 'connexion', 'inscription', 'panier-devis' ) ) ) {
+		return true;
+	}
+
+	return function_exists( 'anrhpub_is_account_page' ) && anrhpub_is_account_page();
+}
+
+/**
  * Enqueue styles and scripts.
  */
 function anrhpub_enqueue_assets() {
@@ -122,23 +152,9 @@ function anrhpub_enqueue_assets() {
 	);
 
 	wp_enqueue_style(
-		'anrhpub-vitrine',
-		ANRHPUB_THEME_URI . '/assets/css/vitrine.css',
-		array( 'anrhpub-animations' ),
-		ANRHPUB_THEME_VERSION
-	);
-
-	wp_enqueue_style(
-		'anrhpub-pages',
-		ANRHPUB_THEME_URI . '/assets/css/pages.css',
-		array( 'anrhpub-vitrine' ),
-		ANRHPUB_THEME_VERSION
-	);
-
-	wp_enqueue_style(
 		'anrhpub-mega-menu',
 		ANRHPUB_THEME_URI . '/assets/css/mega-menu.css',
-		array( 'anrhpub-charte', 'anrhpub-pages' ),
+		array( 'anrhpub-charte' ),
 		ANRHPUB_THEME_VERSION
 	);
 
@@ -149,12 +165,41 @@ function anrhpub_enqueue_assets() {
 		ANRHPUB_THEME_VERSION
 	);
 
-	wp_enqueue_style(
-		'anrhpub-b2b',
-		ANRHPUB_THEME_URI . '/assets/css/b2b.css',
-		array( 'anrhpub-pages' ),
-		ANRHPUB_THEME_VERSION
-	);
+	if ( is_front_page() ) {
+		wp_enqueue_style(
+			'anrhpub-vitrine',
+			ANRHPUB_THEME_URI . '/assets/css/vitrine.css',
+			array( 'anrhpub-animations' ),
+			ANRHPUB_THEME_VERSION
+		);
+	}
+
+	$pages_deps = array( 'anrhpub-animations' );
+	if ( is_front_page() ) {
+		$pages_deps[] = 'anrhpub-vitrine';
+	}
+
+	if ( anrhpub_needs_pages_css() ) {
+		wp_enqueue_style(
+			'anrhpub-pages',
+			ANRHPUB_THEME_URI . '/assets/css/pages.css',
+			$pages_deps,
+			ANRHPUB_THEME_VERSION
+		);
+	}
+
+	if ( anrhpub_needs_b2b_css() ) {
+		$b2b_deps = array( 'anrhpub-animations' );
+		if ( wp_style_is( 'anrhpub-pages', 'enqueued' ) ) {
+			$b2b_deps[] = 'anrhpub-pages';
+		}
+		wp_enqueue_style(
+			'anrhpub-b2b',
+			ANRHPUB_THEME_URI . '/assets/css/b2b.css',
+			$b2b_deps,
+			ANRHPUB_THEME_VERSION
+		);
+	}
 
 	wp_enqueue_script(
 		'anrhpub-main',

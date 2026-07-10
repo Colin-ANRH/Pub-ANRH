@@ -284,6 +284,22 @@ function anrhpub_create_quote_from_cart( $client_id, $status, $items, $message =
 }
 
 /**
+ * Autorisation téléchargement PDF devis.
+ *
+ * @param int $quote_id Quote ID.
+ * @return bool
+ */
+function anrhpub_user_can_download_quote_pdf( $quote_id ) {
+	$quote_id = (int) $quote_id;
+
+	if ( $quote_id <= 0 ) {
+		return false;
+	}
+
+	return current_user_can( 'edit_post', $quote_id ) || anrhpub_client_owns_quote( $quote_id );
+}
+
+/**
  * Téléchargement PDF devis.
  */
 function anrhpub_handle_quote_download() {
@@ -298,10 +314,7 @@ function anrhpub_handle_quote_download() {
 		wp_die( esc_html__( 'Lien invalide.', 'anrhpub_theme' ), 403 );
 	}
 
-	$can_admin = current_user_can( 'edit_posts' );
-	$can_client = anrhpub_client_owns_quote( $quote_id );
-
-	if ( ! $can_admin && ! $can_client ) {
+	if ( ! anrhpub_user_can_download_quote_pdf( $quote_id ) ) {
 		wp_die( esc_html__( 'Accès refusé.', 'anrhpub_theme' ), 403 );
 	}
 

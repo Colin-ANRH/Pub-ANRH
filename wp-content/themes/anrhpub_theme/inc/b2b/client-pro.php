@@ -47,7 +47,7 @@ function anrhpub_client_is_approved( $user_id = 0 ) {
 	$status = (string) get_user_meta( $user_id, ANRHPUB_ACCOUNT_STATUS_META, true );
 
 	if ( '' === $status ) {
-		return true;
+		return false;
 	}
 
 	return 'approved' === $status;
@@ -72,7 +72,7 @@ function anrhpub_get_account_status( $user_id = 0 ) {
 	$user_id = $user_id ? (int) $user_id : anrhpub_get_client_user_id();
 	$status  = (string) get_user_meta( $user_id, ANRHPUB_ACCOUNT_STATUS_META, true );
 
-	return $status ? $status : 'approved';
+	return $status ? $status : 'pending';
 }
 
 /**
@@ -253,3 +253,34 @@ function anrhpub_render_account_status_notice() {
 	echo '</div></div>';
 }
 add_action( 'wp_body_open', 'anrhpub_render_account_status_notice', 5 );
+
+/**
+ * Comptes clients existants sans statut : approuvés une fois (évite régression).
+ */
+function anrhpub_migrate_legacy_approved_clients() {
+	if ( get_option( 'anrhpub_legacy_approved_migrated' ) ) {
+		return;
+	}
+
+	if ( ! function_exists( 'anrhpub_user_has_client_role' ) ) {
+		return;
+	}
+
+	$users = get_users(
+		array(
+			'role__in' => array( ANRHPUB_CLIENT_ROLE ),
+			'fields'   => 'ID',
+		)
+	);
+
+	foreach ( $users as $user_id ) {
+		$status = (string) get_user_meta( (int) $user_id, ANRHPUB_ACCOUNT_STATUS_META, true );
+
+		if ( '' === $status ) {
+			update_user_meta( (int) $user_id, ANRHPUB_ACCOUNT_STATUS_META, 'approved' );
+		}
+	}
+
+	update_option( 'anrhpub_legacy_approved_migrated', 1, false );
+}
+add_action( 'init', 'anrhpub_migrate_legacy_approved_clients', 20 );
