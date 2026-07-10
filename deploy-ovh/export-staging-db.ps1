@@ -19,4 +19,4 @@ Write-Host "Export de $db vers $out ..."
     } |
     Set-Content -Path $out -Encoding UTF8
 
-Write-Host "OK — importez ce fichier dans phpMyAdmin (base anrservipubanrh)."
+Write-Host 'OK - importez ce fichier dans phpMyAdmin (base anrservipubanrh).'
