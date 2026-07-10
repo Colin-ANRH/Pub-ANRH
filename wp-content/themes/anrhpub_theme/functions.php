@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_THEME_VERSION', '2.38.0' );
+define( 'ANRHPUB_THEME_VERSION', '2.39.0' );
 define( 'ANRHPUB_THEME_DIR', get_template_directory() );
 define( 'ANRHPUB_THEME_URI', get_template_directory_uri() );
 
@@ -48,6 +48,7 @@ require_once ANRHPUB_THEME_DIR . '/inc/site-branding.php';
 require_once ANRHPUB_THEME_DIR . '/inc/seo.php';
 require_once ANRHPUB_THEME_DIR . '/inc/seo-admin.php';
 require_once ANRHPUB_THEME_DIR . '/inc/gdpr.php';
+require_once ANRHPUB_THEME_DIR . '/inc/charset-repair.php';
 require_once ANRHPUB_THEME_DIR . '/inc/b2b/bootstrap.php';
 
 // Admin texts for accueil « confiance / partenaires ».

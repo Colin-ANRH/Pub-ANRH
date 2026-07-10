@@ -37,7 +37,7 @@ function anrhpub_seed_demo_data() {
 		array(
 			'title'    => 'STYLO ST14',
 			'ref'      => 'ST14',
-			'excerpt'  => 'Stylo bille rétractable. Corps transparent fait de bouteilles d’eau recyclées. Encre noire.',
+			'excerpt'  => 'Stylo bille rétractable. Corps transparent fait de bouteilles d'eau recyclées. Encre noire.',
 			'cat'      => 'stylos',
 			'featured' => '1',
 			'badge'    => '',
@@ -77,7 +77,7 @@ function anrhpub_seed_demo_data() {
 		array(
 			'title'    => 'CONGRES1 - Housse tablette RPET',
 			'ref'      => 'CONGRES1',
-			'excerpt'  => 'Housse feutre RPET rembourrée, jusqu’à 15 pouces, poche avant pour accessoires.',
+			'excerpt'  => 'Housse feutre RPET rembourrée, jusqu'à 15 pouces, poche avant pour accessoires.',
 			'cat'      => 'conferenciers-et-sacs-congres',
 			'featured' => '1',
 			'badge'    => 'nouveau',
@@ -185,7 +185,7 @@ function anrhpub_seed_demo_data() {
 					'post_type'    => 'anr_product',
 					'post_title'   => $product['title'],
 					'post_excerpt' => $product['excerpt'],
-					'post_content' => '<p>' . esc_html( $product['excerpt'] ) . '</p><p><em>' . esc_html__( 'Produit de démonstration — contenu à remplacer lors de l’intégration du catalogue réel.', 'anrhpub_theme' ) . '</em></p>',
+					'post_content' => '<p>' . esc_html( $product['excerpt'] ) . '</p><p><em>' . esc_html__( "Produit de démonstration — contenu à remplacer lors de l'intégration du catalogue réel.", 'anrhpub_theme' ) . '</em></p>',
 					'post_status'  => 'publish',
 				),
 				true
@@ -254,10 +254,10 @@ function anrhpub_seed_demo_data() {
 			),
 			'contact'      => array(
 				'title'   => 'Contact & devis',
-				'content' => '<p>Pour toute demande d’information ou de devis personnalisé, utilisez les coordonnées ci-dessous.</p>',
+				'content' => '<p>Pour toute demande d'information ou de devis personnalisé, utilisez les coordonnées ci-dessous.</p>',
 			),
 			'histoire-anrh' => array(
-				'title'   => 'Histoire de l’ANRH',
+				'title'   => 'Histoire de l'ANRH',
 				'content' => '',
 			),
 		);
@@ -405,7 +405,7 @@ function anrhpub_insert_demo_product( $product, $term_ids ) {
 			'post_type'    => 'anr_product',
 			'post_title'   => $product['title'],
 			'post_excerpt' => $product['excerpt'],
-			'post_content' => '<p>' . esc_html( $product['excerpt'] ) . '</p><p><em>' . esc_html__( 'Produit de démonstration — contenu à remplacer lors de l’intégration du catalogue réel.', 'anrhpub_theme' ) . '</em></p>',
+			'post_content' => '<p>' . esc_html( $product['excerpt'] ) . '</p><p><em>' . esc_html__( "Produit de démonstration — contenu à remplacer lors de l'intégration du catalogue réel.", 'anrhpub_theme' ) . '</em></p>',
 			'post_status'  => 'publish',
 		),
 		true
