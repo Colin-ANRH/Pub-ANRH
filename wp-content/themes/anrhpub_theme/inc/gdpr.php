@@ -82,7 +82,7 @@ function anrhpub_privacy_url() {
  * Expose l’état consentement au JS (avant autres scripts).
  */
 function anrhpub_enqueue_cookie_consent_bootstrap() {
-	if ( is_admin() ) {
+	if ( is_admin() || ( function_exists( 'anrhpub_is_staging_environment' ) && anrhpub_is_staging_environment() ) ) {
 		return;
 	}
 
@@ -130,7 +130,7 @@ add_filter( 'script_loader_tag', 'anrhpub_block_scripts_without_consent', 10, 3 
  * Bandeau cookies.
  */
 function anrhpub_render_cookie_banner() {
-	if ( is_admin() || anrhpub_get_cookie_consent_value() !== '' ) {
+	if ( is_admin() || ( function_exists( 'anrhpub_is_staging_environment' ) && anrhpub_is_staging_environment() ) || anrhpub_get_cookie_consent_value() !== '' ) {
 		return;
 	}
 	?>

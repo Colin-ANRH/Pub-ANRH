@@ -185,7 +185,21 @@ function anrhpub_save_product_stock_meta( $post_id ) {
 add_action( 'save_post_anr_product', 'anrhpub_save_product_stock_meta' );
 
 /**
- * Filtre facettes sur archive catalogue.
+ * Filtres facettes actifs sur le catalogue ?
+ *
+ * @return bool
+ */
+function anrhpub_catalogue_has_active_facets() {
+	foreach ( array( 'anr_material', 'anr_product_badge' ) as $tax ) {
+		if ( ! empty( $_GET[ $tax ] ) ) {
+			return true;
+		}
+	}
+
+	return ! empty( $_GET['stock'] );
+}
+
+/**
  *
  * @param WP_Query $query Query.
  */

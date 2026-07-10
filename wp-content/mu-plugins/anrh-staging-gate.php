@@ -45,6 +45,69 @@ add_filter(
 	999
 );
 
+add_filter( 'wp_sitemaps_enabled', '__return_false', 999 );
+
+add_filter(
+	'wp_robots',
+	static function ( $robots ) {
+		$robots['noindex']   = true;
+		$robots['nofollow']  = true;
+		$robots['noarchive'] = true;
+		$robots['nosnippet'] = true;
+
+		return $robots;
+	},
+	999
+);
+
+add_filter( 'xmlrpc_enabled', '__return_false' );
+
+add_action(
+	'init',
+	static function () {
+		if ( wp_doing_ajax() && ! anrh_staging_gate_is_authenticated() ) {
+			wp_send_json_error(
+				array( 'message' => 'Accès restreint.' ),
+				401
+			);
+		}
+	},
+	0
+);
+
+add_action(
+	'init',
+	static function () {
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST && ! anrh_staging_gate_is_authenticated() ) {
+			status_header( 403 );
+			exit( 'Accès restreint.' );
+		}
+	},
+	0
+);
+
+add_action(
+	'do_feed_rss2',
+	static function () {
+		if ( ! anrh_staging_gate_is_authenticated() ) {
+			status_header( 403 );
+			exit( 'Accès restreint.' );
+		}
+	},
+	0
+);
+
+add_action(
+	'do_feed_atom',
+	static function () {
+		if ( ! anrh_staging_gate_is_authenticated() ) {
+			status_header( 403 );
+			exit( 'Accès restreint.' );
+		}
+	},
+	0
+);
+
 add_action(
 	'send_headers',
 	static function () {

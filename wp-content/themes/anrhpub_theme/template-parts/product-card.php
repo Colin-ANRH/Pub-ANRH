@@ -12,7 +12,13 @@
 			<?php anrhpub_product_badge(); ?>
 			<?php
 			if ( has_post_thumbnail() ) {
-				the_post_thumbnail( 'medium_large', array( 'class' => 'product-card__img' ) );
+				the_post_thumbnail(
+					'medium_large',
+					array(
+						'class' => 'product-card__img',
+						'alt'   => function_exists( 'anrhpub_get_product_image_alt' ) ? anrhpub_get_product_image_alt( get_the_ID() ) : get_the_title(),
+					)
+				);
 			} else {
 				anrhpub_product_thumbnail( 0, 'product-card__img' );
 			}

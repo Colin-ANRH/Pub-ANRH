@@ -44,30 +44,4 @@ if ( $count < 1 ) {
 		</ol>
 	</div>
 </nav>
-<?php
-$schema_items = array();
-foreach ( $items as $index => $item ) {
-	$entry = array(
-		'@type'    => 'ListItem',
-		'position' => $index + 1,
-		'name'     => $item['label'] ?? '',
-	);
-	if ( ! empty( $item['url'] ) ) {
-		$entry['item'] = $item['url'];
-	}
-	$schema_items[] = $entry;
-}
-?>
-<script type="application/ld+json">
-<?php
-echo wp_json_encode(
-	array(
-		'@context'        => 'https://schema.org',
-		'@type'           => 'BreadcrumbList',
-		'itemListElement' => $schema_items,
-	),
-	JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-);
-?>
-</script>
 </div>

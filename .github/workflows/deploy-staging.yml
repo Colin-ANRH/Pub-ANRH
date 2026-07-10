@@ -41,7 +41,10 @@ jobs:
           OVH_DB_PASSWORD: test-db-password
           STAGING_GATE_USER: ci-user
           STAGING_GATE_PASSWORD: ci-password
-        run: php deploy-ovh/build-wp-config.php
+        run: |
+          php deploy-ovh/build-wp-config.php
+          grep -q "define( 'WP_ENVIRONMENT_TYPE', 'staging' );" wp-config.php
+          grep -q "define( 'ANRH_STAGING_GATE', true );" wp-config.php
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

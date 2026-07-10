@@ -159,19 +159,23 @@ function anrhpub_get_current_catalogue_url() {
 		);
 	}
 
+	$paged = max( 1, (int) get_query_var( 'paged' ) );
+
 	if ( is_tax( 'anr_category' ) ) {
 		$term = get_queried_object();
 		if ( $term instanceof WP_Term ) {
 			$link = get_term_link( $term );
 			if ( ! is_wp_error( $link ) ) {
-				return (string) $link;
+				$url = (string) $link;
+				if ( $paged > 1 ) {
+					$url = trailingslashit( $url ) . 'page/' . $paged . '/';
+				}
+				return $url;
 			}
 		}
 	}
 
-	$paged = max( 1, (int) get_query_var( 'paged' ) );
-	$url   = anrhpub_catalogue_url();
-
+	$url = anrhpub_catalogue_url();
 	if ( $paged > 1 ) {
 		$url = trailingslashit( $url ) . 'page/' . $paged . '/';
 	}
