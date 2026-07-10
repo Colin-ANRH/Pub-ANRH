@@ -16,10 +16,6 @@ $GLOBALS['anrhpub_test_posts']        = array();
 
 require dirname( __DIR__ ) . '/tests/wp-stubs.php';
 
-require dirname( __DIR__ ) . '/inc/b2b/client-pro.php';
-require dirname( __DIR__ ) . '/inc/product-colors/taxonomy.php';
-require dirname( __DIR__ ) . '/inc/b2b/quotes.php';
-
 if ( ! function_exists( 'anrhpub_clamp_quote_qty' ) ) {
 	function anrhpub_clamp_quote_qty( $product_id, $qty ) {
 		unset( $product_id );
@@ -33,5 +29,9 @@ if ( ! function_exists( 'anrhpub_get_product_min_qty' ) ) {
 		return 1;
 	}
 }
+
+require dirname( __DIR__ ) . '/inc/b2b/client-pro.php';
+require dirname( __DIR__ ) . '/inc/product-colors/taxonomy.php';
+require dirname( __DIR__ ) . '/inc/b2b/quotes.php';
 
 require dirname( __DIR__ ) . '/inc/quote-cart.php';

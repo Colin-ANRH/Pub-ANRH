@@ -111,6 +111,25 @@ function update_post_meta( $post_id, $key, $value ) {
 	return true;
 }
 
+function wp_get_object_terms( $object_id, $taxonomies, $args = array() ) {
+	unset( $object_id, $taxonomies, $args );
+	return array();
+}
+
+function is_wp_error( $thing ) {
+	return false;
+}
+
+function get_term( $term, $taxonomy = '', $output = OBJECT, $filter = 'raw' ) {
+	unset( $term, $taxonomy, $output, $filter );
+	return null;
+}
+
+function get_terms( $args = array() ) {
+	unset( $args );
+	return array();
+}
+
 function anrhpub_get_client_user_id() {
 	return (int) $GLOBALS['anrhpub_test_current_user'];
 }
@@ -118,21 +137,6 @@ function anrhpub_get_client_user_id() {
 function anrhpub_user_has_client_role( $user_id = 0 ) {
 	unset( $user_id );
 	return true;
-}
-
-function anrhpub_product_has_colors( $post_id = 0 ) {
-	unset( $post_id );
-	return false;
-}
-
-function anrhpub_validate_product_color( $product_id, $color_id ) {
-	unset( $product_id, $color_id );
-	return 0;
-}
-
-function anrhpub_clamp_quote_qty_for_color( $product_id, $color_id, $qty ) {
-	unset( $color_id );
-	return anrhpub_clamp_quote_qty( $product_id, $qty );
 }
 
 function anrhpub_reset_test_state(): void {
