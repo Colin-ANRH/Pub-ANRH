@@ -37,7 +37,7 @@ jobs:
           if [ -n "${{ secrets.OVH_FTP_REMOTE_DIR }}" ]; then
             echo "REMOTE_DIR=${{ secrets.OVH_FTP_REMOTE_DIR }}" >> $GITHUB_ENV
           else
-            echo "REMOTE_DIR=www/pub.anrh.fr/" >> $GITHUB_ENV
+            echo "REMOTE_DIR=pub.anrh.fr/" >> $GITHUB_ENV
           fi
 
       - name: Déployer sur OVH (FTP)

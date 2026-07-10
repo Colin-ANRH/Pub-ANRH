@@ -59,7 +59,7 @@ jobs:
           username: ${{ secrets.OVH_FTP_USERNAME }}
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: upload-bundle/
-          server-dir: www/pub.anrh.fr/
+          server-dir: pub.anrh.fr/
           log-level: standard
 
       - name: Décompresser sur le serveur

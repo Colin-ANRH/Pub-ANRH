@@ -114,7 +114,7 @@ Configurer dans **Settings → Secrets and variables → Actions** :
 | Élément | Valeur |
 |---------|--------|
 | **Domaine** | `pub.anrh.fr` |
-| **Dossier FTP OVH** | `www/pub.anrh.fr/` |
+| **Dossier FTP OVH** | `pub.anrh.fr/` (à la racine FTP, **pas** dans `www/`) |
 | **Base MySQL** | `anrservipubanrh` |
 | **Serveur MySQL** | `anrservipubanrh.mysql.db` |
 
