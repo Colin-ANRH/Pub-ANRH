@@ -1,0 +1,44 @@
+name: Diagnostic chemin FTP OVH
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Tester chemin www/pub.anrh.fr
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: deploy-ovh/
+          server-dir: www/pub.anrh.fr/
+          log-level: minimal
+          include: |
+            ovh-path-test.php
+
+      - name: Tester chemin pub.anrh.fr
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: deploy-ovh/
+          server-dir: pub.anrh.fr/
+          log-level: minimal
+          include: |
+            ovh-path-test.php
+
+      - name: Instructions
+        run: |
+          echo "Testez dans le navigateur :"
+          echo "  https://pub.anrh.fr/ovh-path-test.php"
+          echo "  https://www.pub.anrh.fr/ovh-path-test.php"
+          echo "Le bon chemin affiche : OK — WordPress dossier racine pub.anrh.fr"

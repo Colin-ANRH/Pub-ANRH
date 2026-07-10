@@ -30,9 +30,15 @@ jobs:
           mkdir -p deploy-bundle/wp-content/mu-plugins
           cp wp-config.php deploy-bundle/
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
+          cp deploy-ovh/ovh-path-test.php deploy-bundle/ovh-path-test.php
           cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
           cp -r wp-content/themes/anrhpub_theme deploy-bundle/wp-content/themes/
+          if [ -n "${{ secrets.OVH_FTP_REMOTE_DIR }}" ]; then
+            echo "REMOTE_DIR=${{ secrets.OVH_FTP_REMOTE_DIR }}" >> $GITHUB_ENV
+          else
+            echo "REMOTE_DIR=www/pub.anrh.fr/" >> $GITHUB_ENV
+          fi
 
       - name: Déployer sur OVH (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -41,6 +47,5 @@ jobs:
           username: ${{ secrets.OVH_FTP_USERNAME }}
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: deploy-bundle/
-          # Racine FTP = home OVH. Si FTP s'ouvre dans www/, utiliser pub.anrh.fr/
-          server-dir: www/pub.anrh.fr/
+          server-dir: ${{ env.REMOTE_DIR }}
           log-level: minimal
