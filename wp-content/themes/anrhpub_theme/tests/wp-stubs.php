@@ -130,6 +130,14 @@ function get_terms( $args = array() ) {
 	return array();
 }
 
+function get_the_ID() {
+	return 0;
+}
+
+function home_url( $path = '' ) {
+	return 'https://example.test' . $path;
+}
+
 function anrhpub_get_client_user_id() {
 	return (int) $GLOBALS['anrhpub_test_current_user'];
 }
