@@ -33,6 +33,7 @@ jobs:
           cp wp-config.php deploy-bundle/
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
           cp deploy-ovh/ovh-path-test.php deploy-bundle/ovh-path-test.php
+          cp deploy-ovh/staging-health.php deploy-bundle/staging-health.php
           cp *.php deploy-bundle/
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
           cp -r wp-content/themes/* deploy-bundle/wp-content/themes/
