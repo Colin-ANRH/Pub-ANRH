@@ -260,11 +260,11 @@ function anrhpub_render_catalogue_facets() {
 	$current_s = isset( $_GET['stock'] ) ? sanitize_key( wp_unslash( (string) $_GET['stock'] ) ) : '';
 
 	echo '<div class="catalogue-facets">';
-	echo '<h3 class="catalogue-facets__title">' . esc_html__( 'Filtres', 'anrhpub_theme' ) . '</h3>';
+	echo '<h3 class="catalogue-facets__title">' . esc_html__( 'Affiner', 'anrhpub_theme' ) . '</h3>';
 	echo '<form method="get" class="catalogue-facets__form">';
 
 	if ( ! empty( $materials ) && ! is_wp_error( $materials ) ) {
-		echo '<p><label for="facet-material">' . esc_html__( 'Matière', 'anrhpub_theme' ) . '</label>';
+		echo '<p class="catalogue-facets__field"><label for="facet-material">' . esc_html__( 'Matière', 'anrhpub_theme' ) . '</label>';
 		echo '<select name="anr_material" id="facet-material"><option value="">' . esc_html__( 'Toutes', 'anrhpub_theme' ) . '</option>';
 		foreach ( $materials as $term ) {
 			printf( '<option value="%s" %s>%s</option>', esc_attr( $term->slug ), selected( $current_m, $term->slug, false ), esc_html( $term->name ) );
@@ -273,7 +273,7 @@ function anrhpub_render_catalogue_facets() {
 	}
 
 	if ( ! empty( $badges ) && ! is_wp_error( $badges ) ) {
-		echo '<p><label for="facet-badge">' . esc_html__( 'Label', 'anrhpub_theme' ) . '</label>';
+		echo '<p class="catalogue-facets__field"><label for="facet-badge">' . esc_html__( 'Label', 'anrhpub_theme' ) . '</label>';
 		echo '<select name="anr_product_badge" id="facet-badge"><option value="">' . esc_html__( 'Tous', 'anrhpub_theme' ) . '</option>';
 		foreach ( $badges as $term ) {
 			printf( '<option value="%s" %s>%s</option>', esc_attr( $term->slug ), selected( $current_b, $term->slug, false ), esc_html( $term->name ) );
@@ -281,13 +281,13 @@ function anrhpub_render_catalogue_facets() {
 		echo '</select></p>';
 	}
 
-	echo '<p><label for="facet-stock">' . esc_html__( 'Disponibilité', 'anrhpub_theme' ) . '</label>';
+	echo '<p class="catalogue-facets__field"><label for="facet-stock">' . esc_html__( 'Disponibilité', 'anrhpub_theme' ) . '</label>';
 	echo '<select name="stock" id="facet-stock"><option value="">' . esc_html__( 'Toutes', 'anrhpub_theme' ) . '</option>';
 	foreach ( anrhpub_stock_statuses() as $key => $label ) {
 		printf( '<option value="%s" %s>%s</option>', esc_attr( $key ), selected( $current_s, $key, false ), esc_html( $label ) );
 	}
 	echo '</select></p>';
 
-	echo '<button type="submit" class="btn btn--outline btn--sm">' . esc_html__( 'Appliquer', 'anrhpub_theme' ) . '</button>';
+	echo '<button type="submit" class="btn btn--outline btn--sm catalogue-facets__submit">' . esc_html__( 'Appliquer', 'anrhpub_theme' ) . '</button>';
 	echo '</form></div>';
 }

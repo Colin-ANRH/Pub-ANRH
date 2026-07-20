@@ -371,7 +371,7 @@ function anrhpub_get_child_categories( $parent_id, $hide_empty = false ) {
 }
 
 /**
- * Render hierarchical category filter list (accordéon).
+ * Render hierarchical category filter list (dropdowns par grande catégorie).
  *
  * @param WP_Term|null $current_term Active term.
  */
@@ -390,52 +390,100 @@ function anrhpub_render_catalogue_filters( $current_term = null ) {
 	}
 
 	foreach ( $parents as $parent ) {
-		$children     = anrhpub_get_child_categories( $parent->term_id, false );
-		$has_children = ! empty( $children );
+		$children         = anrhpub_get_child_categories( $parent->term_id, false );
+		$has_children     = ! empty( $children );
 		$is_parent_active = $is_tax && $active_id === (int) $parent->term_id;
-		$is_child_active  = $is_tax && $active_parent_id === (int) $parent->term_id;
-		$is_expanded      = $is_parent_active || $is_child_active;
+		$is_child_active  = $is_tax && $active_parent_id === (int) $parent->term_id && $active_id !== (int) $parent->term_id;
+		$is_branch_active = $is_parent_active || $is_child_active;
+		$is_expanded      = $is_branch_active;
 		$panel_id         = 'catalogue-filter-' . (int) $parent->term_id;
+		$parent_link      = get_term_link( $parent );
+
+		if ( is_wp_error( $parent_link ) ) {
+			continue;
+		}
+
+		$group_cls = array( 'catalogue-filters__group' );
+		if ( $is_expanded ) {
+			$group_cls[] = 'is-expanded';
+		}
+		if ( $is_branch_active ) {
+			$group_cls[] = 'is-current';
+		}
+		if ( ! $has_children ) {
+			$group_cls[] = 'catalogue-filters__group--solo';
+		}
 		?>
-		<li class="catalogue-filters__group<?php echo $is_expanded ? ' is-expanded' : ''; ?><?php echo ! $has_children ? ' catalogue-filters__group--solo' : ''; ?>">
-			<div class="catalogue-filters__head">
-				<?php if ( $has_children ) : ?>
+		<li class="<?php echo esc_attr( implode( ' ', $group_cls ) ); ?>">
+			<?php if ( $has_children ) : ?>
+				<div class="catalogue-filters__head">
 					<button
 						type="button"
 						class="catalogue-filters__toggle"
 						aria-expanded="<?php echo $is_expanded ? 'true' : 'false'; ?>"
 						aria-controls="<?php echo esc_attr( $panel_id ); ?>"
-						aria-label="<?php echo esc_attr( sprintf( __( 'Afficher les sous-catégories : %s', 'anrhpub_theme' ), $parent->name ) ); ?>"
+						id="<?php echo esc_attr( $panel_id ); ?>-btn"
 					>
 						<span class="catalogue-filters__chevron" aria-hidden="true"></span>
+						<span class="catalogue-filters__label"><?php echo esc_html( $parent->name ); ?></span>
+						<?php if ( (int) $parent->count > 0 ) : ?>
+							<span class="catalogue-filters__count"><?php echo esc_html( (string) (int) $parent->count ); ?></span>
+						<?php endif; ?>
 					</button>
-				<?php endif; ?>
-				<a
-					class="catalogue-filters__parent<?php echo $is_parent_active ? ' is-active' : ''; ?>"
-					href="<?php echo esc_url( get_term_link( $parent ) ); ?>"
+				</div>
+				<ul
+					id="<?php echo esc_attr( $panel_id ); ?>"
+					class="catalogue-filters__children"
+					role="region"
+					aria-labelledby="<?php echo esc_attr( $panel_id ); ?>-btn"
+					<?php echo $is_expanded ? '' : ' hidden'; ?>
 				>
-					<span class="catalogue-filters__label"><?php echo esc_html( $parent->name ); ?></span>
-					<?php if ( (int) $parent->count > 0 ) : ?>
-						<span class="catalogue-filters__count"><?php echo esc_html( (string) $parent->count ); ?></span>
-					<?php endif; ?>
-				</a>
-			</div>
-			<?php if ( $has_children ) : ?>
-				<ul id="<?php echo esc_attr( $panel_id ); ?>" class="catalogue-filters__children">
+					<li>
+						<a
+							class="catalogue-filters__child catalogue-filters__child--all<?php echo $is_parent_active ? ' is-active' : ''; ?>"
+							href="<?php echo esc_url( $parent_link ); ?>"
+						>
+							<span>
+								<?php
+								printf(
+									/* translators: %s: parent category name */
+									esc_html__( 'Tout · %s', 'anrhpub_theme' ),
+									esc_html( $parent->name )
+								);
+								?>
+							</span>
+						</a>
+					</li>
 					<?php foreach ( $children as $child ) : ?>
+						<?php
+						$child_link = get_term_link( $child );
+						if ( is_wp_error( $child_link ) ) {
+							continue;
+						}
+						?>
 						<li>
 							<a
 								class="catalogue-filters__child<?php echo ( $is_tax && $active_id === (int) $child->term_id ) ? ' is-active' : ''; ?>"
-								href="<?php echo esc_url( get_term_link( $child ) ); ?>"
+								href="<?php echo esc_url( $child_link ); ?>"
 							>
 								<span><?php echo esc_html( $child->name ); ?></span>
 								<?php if ( (int) $child->count > 0 ) : ?>
-									<span class="catalogue-filters__count"><?php echo esc_html( (string) $child->count ); ?></span>
+									<span class="catalogue-filters__count"><?php echo esc_html( (string) (int) $child->count ); ?></span>
 								<?php endif; ?>
 							</a>
 						</li>
 					<?php endforeach; ?>
 				</ul>
+			<?php else : ?>
+				<a
+					class="catalogue-filters__parent<?php echo $is_parent_active ? ' is-active' : ''; ?>"
+					href="<?php echo esc_url( $parent_link ); ?>"
+				>
+					<span class="catalogue-filters__label"><?php echo esc_html( $parent->name ); ?></span>
+					<?php if ( (int) $parent->count > 0 ) : ?>
+						<span class="catalogue-filters__count"><?php echo esc_html( (string) (int) $parent->count ); ?></span>
+					<?php endif; ?>
+				</a>
 			<?php endif; ?>
 		</li>
 		<?php

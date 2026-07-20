@@ -21,7 +21,7 @@ $hero = anrhpub_get_catalogue_hero_args();
 
 	<div class="container catalogue-layout">
 		<aside class="catalogue-filters catalogue-filters--accordion" aria-label="<?php esc_attr_e( 'Catégories du catalogue', 'anrhpub_theme' ); ?>">
-			<h2><?php esc_html_e( 'Catégories', 'anrhpub_theme' ); ?></h2>
+			<h2><?php esc_html_e( 'Parcourir', 'anrhpub_theme' ); ?></h2>
 			<?php get_template_part( 'template-parts/catalogue', 'filters-list' ); ?>
 			<?php if ( function_exists( 'anrhpub_render_catalogue_facets' ) ) : ?>
 				<?php anrhpub_render_catalogue_facets(); ?>
