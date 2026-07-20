@@ -31,6 +31,13 @@ define( 'ANRH_STAGING_GATE', VOTRE_STAGING_GATE_ENABLED );
 define( 'ANRH_STAGING_USER', 'VOTRE_STAGING_USER' );
 define( 'ANRH_STAGING_PASSWORD', 'VOTRE_STAGING_PASSWORD' );
 
+// Salesforce (espace client B2B) — secrets injectés au deploy ; vides = sync inactive.
+define( 'ANRHPUB_SF_CLIENT_ID', 'VOTRE_SF_CLIENT_ID' );
+define( 'ANRHPUB_SF_CLIENT_SECRET', 'VOTRE_SF_CLIENT_SECRET' );
+define( 'ANRHPUB_SF_REFRESH_TOKEN', 'VOTRE_SF_REFRESH_TOKEN' );
+define( 'ANRHPUB_SF_LOGIN_URL', 'VOTRE_SF_LOGIN_URL' );
+define( 'ANRHPUB_SF_API_VERSION', 'VOTRE_SF_API_VERSION' );
+
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }

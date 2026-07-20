@@ -22,6 +22,29 @@ if ( $staging_password === false || $staging_password === '' ) {
 
 $gate_enabled = 'true';
 
+// Salesforce — optionnels ; chaînes vides = connexion désactivée.
+$sf_client_id     = getenv( 'SF_CLIENT_ID' );
+$sf_client_secret = getenv( 'SF_CLIENT_SECRET' );
+$sf_refresh_token = getenv( 'SF_REFRESH_TOKEN' );
+$sf_login_url     = getenv( 'SF_LOGIN_URL' );
+$sf_api_version   = getenv( 'SF_API_VERSION' );
+
+if ( $sf_client_id === false ) {
+	$sf_client_id = '';
+}
+if ( $sf_client_secret === false ) {
+	$sf_client_secret = '';
+}
+if ( $sf_refresh_token === false ) {
+	$sf_refresh_token = '';
+}
+if ( $sf_login_url === false || $sf_login_url === '' ) {
+	$sf_login_url = 'https://login.salesforce.com';
+}
+if ( $sf_api_version === false || $sf_api_version === '' ) {
+	$sf_api_version = 'v59.0';
+}
+
 $template = file_get_contents( __DIR__ . '/wp-config.template.php' );
 if ( $template === false ) {
 	fwrite( STDERR, "Template wp-config.template.php introuvable.\n" );
@@ -34,12 +57,22 @@ $config = str_replace(
 		'VOTRE_STAGING_GATE_ENABLED',
 		'VOTRE_STAGING_USER',
 		'VOTRE_STAGING_PASSWORD',
+		'VOTRE_SF_CLIENT_ID',
+		'VOTRE_SF_CLIENT_SECRET',
+		'VOTRE_SF_REFRESH_TOKEN',
+		'VOTRE_SF_LOGIN_URL',
+		'VOTRE_SF_API_VERSION',
 	),
 	array(
 		$password,
 		$gate_enabled,
 		$staging_user,
 		$staging_password,
+		$sf_client_id,
+		$sf_client_secret,
+		$sf_refresh_token,
+		$sf_login_url,
+		$sf_api_version,
 	),
 	$template
 );

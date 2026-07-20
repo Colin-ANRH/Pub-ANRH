@@ -23,6 +23,8 @@ require_once $b2b_dir . '/reorder.php';
 require_once $b2b_dir . '/tools.php';
 require_once $b2b_dir . '/security.php';
 require_once $b2b_dir . '/performance.php';
+require_once $b2b_dir . '/salesforce.php';
+require_once $b2b_dir . '/salesforce-admin.php';
 
 /**
  * Activation B2B (pages, règles, rôles).

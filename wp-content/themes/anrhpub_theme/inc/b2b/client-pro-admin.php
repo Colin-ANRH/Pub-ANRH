@@ -62,9 +62,11 @@ function anrhpub_user_profile_pro_fields( $user ) {
 	$status  = $status ? $status : 'approved';
 	$siret   = (string) get_user_meta( $user->ID, ANRHPUB_SIRET_META, true );
 	$vat     = (string) get_user_meta( $user->ID, ANRHPUB_VAT_META, true );
-	$erp     = (string) get_user_meta( $user->ID, ANRHPUB_ERP_CODE_META, true );
-	$terms   = (string) get_user_meta( $user->ID, ANRHPUB_PAYMENT_TERMS_META, true );
-	$disc    = (float) get_user_meta( $user->ID, ANRHPUB_DISCOUNT_META, true );
+	$erp       = (string) get_user_meta( $user->ID, ANRHPUB_ERP_CODE_META, true );
+	$terms     = (string) get_user_meta( $user->ID, ANRHPUB_PAYMENT_TERMS_META, true );
+	$disc      = (float) get_user_meta( $user->ID, ANRHPUB_DISCOUNT_META, true );
+	$sf_account = defined( 'ANRHPUB_SF_ACCOUNT_META' ) ? (string) get_user_meta( $user->ID, ANRHPUB_SF_ACCOUNT_META, true ) : '';
+	$sf_contact = defined( 'ANRHPUB_SF_CONTACT_META' ) ? (string) get_user_meta( $user->ID, ANRHPUB_SF_CONTACT_META, true ) : '';
 	?>
 	<h2><?php esc_html_e( 'Compte professionnel ANRH', 'anrhpub_theme' ); ?></h2>
 	<table class="form-table" role="presentation">
@@ -89,6 +91,14 @@ function anrhpub_user_profile_pro_fields( $user ) {
 		<tr>
 			<th><label for="anrhpub_erp_code"><?php esc_html_e( 'Code client ERP', 'anrhpub_theme' ); ?></label></th>
 			<td><input type="text" name="anrhpub_erp_code" id="anrhpub_erp_code" value="<?php echo esc_attr( $erp ); ?>" class="regular-text" /></td>
+		</tr>
+		<tr>
+			<th><label for="anrhpub_sf_account_id"><?php esc_html_e( 'Salesforce Account Id', 'anrhpub_theme' ); ?></label></th>
+			<td><input type="text" name="anrhpub_sf_account_id" id="anrhpub_sf_account_id" value="<?php echo esc_attr( $sf_account ); ?>" class="regular-text" /></td>
+		</tr>
+		<tr>
+			<th><label for="anrhpub_sf_contact_id"><?php esc_html_e( 'Salesforce Contact Id', 'anrhpub_theme' ); ?></label></th>
+			<td><input type="text" name="anrhpub_sf_contact_id" id="anrhpub_sf_contact_id" value="<?php echo esc_attr( $sf_contact ); ?>" class="regular-text" /></td>
 		</tr>
 		<tr>
 			<th><label for="anrhpub_payment_terms"><?php esc_html_e( 'Conditions de paiement', 'anrhpub_theme' ); ?></label></th>
@@ -142,6 +152,12 @@ function anrhpub_save_user_profile_pro_fields( $user_id ) {
 	}
 	if ( isset( $_POST['anrhpub_erp_code'] ) ) {
 		update_user_meta( $user_id, ANRHPUB_ERP_CODE_META, sanitize_text_field( wp_unslash( $_POST['anrhpub_erp_code'] ) ) );
+	}
+	if ( defined( 'ANRHPUB_SF_ACCOUNT_META' ) && isset( $_POST['anrhpub_sf_account_id'] ) ) {
+		update_user_meta( $user_id, ANRHPUB_SF_ACCOUNT_META, sanitize_text_field( wp_unslash( $_POST['anrhpub_sf_account_id'] ) ) );
+	}
+	if ( defined( 'ANRHPUB_SF_CONTACT_META' ) && isset( $_POST['anrhpub_sf_contact_id'] ) ) {
+		update_user_meta( $user_id, ANRHPUB_SF_CONTACT_META, sanitize_text_field( wp_unslash( $_POST['anrhpub_sf_contact_id'] ) ) );
 	}
 	if ( isset( $_POST['anrhpub_payment_terms'] ) ) {
 		update_user_meta( $user_id, ANRHPUB_PAYMENT_TERMS_META, sanitize_text_field( wp_unslash( $_POST['anrhpub_payment_terms'] ) ) );
