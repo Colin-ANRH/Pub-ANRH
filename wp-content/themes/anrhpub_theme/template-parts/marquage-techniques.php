@@ -20,31 +20,38 @@ if ( 'detail' === $mode ) :
 	?>
 	<div class="marquage-detail" data-animate>
 		<nav class="marquage-detail__nav" aria-label="<?php esc_attr_e( 'Techniques de marquage', 'anrhpub_theme' ); ?>">
+			<p class="marquage-detail__nav-label"><?php esc_html_e( 'Aller à', 'anrhpub_theme' ); ?></p>
 			<ul>
 				<?php foreach ( $techniques as $tech ) : ?>
 					<li>
-						<a href="#marquage-<?php echo esc_attr( $tech['slug'] ); ?>"><?php echo esc_html( $tech['label'] ); ?></a>
+						<a href="#marquage-<?php echo esc_attr( $tech['slug'] ); ?>">
+							<span class="marquage-detail__nav-glyph" aria-hidden="true"><?php echo esc_html( mb_substr( $tech['label'], 0, 1 ) ); ?></span>
+							<span><?php echo esc_html( $tech['label'] ); ?></span>
+						</a>
 					</li>
 				<?php endforeach; ?>
 			</ul>
 		</nav>
 
 		<div class="marquage-detail__list">
-			<?php foreach ( $techniques as $index => $tech ) : ?>
+			<?php foreach ( $techniques as $tech ) : ?>
 				<article
 					id="marquage-<?php echo esc_attr( $tech['slug'] ); ?>"
-					class="technique-block technique-block--<?php echo esc_attr( $tech['slug'] ); ?><?php echo 0 === $index % 2 ? ' technique-block--alt' : ''; ?>"
+					class="technique-block technique-block--<?php echo esc_attr( $tech['slug'] ); ?>"
 					data-animate
 				>
 					<div class="technique-block__head">
 						<span class="technique-block__glyph" aria-hidden="true"><?php echo esc_html( mb_substr( $tech['label'], 0, 1 ) ); ?></span>
-						<h2 class="technique-block__title"><?php echo esc_html( $tech['label'] ); ?></h2>
+						<div>
+							<h3 class="technique-block__title"><?php echo esc_html( $tech['label'] ); ?></h3>
+							<p class="technique-block__short"><?php echo esc_html( anrhpub_marquage_technique_short_desc( $tech['slug'] ) ); ?></p>
+						</div>
 					</div>
 					<div class="technique-block__body">
 						<p class="technique-block__intro"><?php echo esc_html( $tech['intro'] ); ?></p>
 						<?php if ( ! empty( $tech['features'] ) ) : ?>
 							<div class="technique-block__features">
-								<h3><?php esc_html_e( 'Caractéristiques', 'anrhpub_theme' ); ?></h3>
+								<h4><?php esc_html_e( 'Points clés', 'anrhpub_theme' ); ?></h4>
 								<ul>
 									<?php foreach ( $tech['features'] as $feature ) : ?>
 										<li><?php echo esc_html( $feature ); ?></li>
