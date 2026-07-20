@@ -19,11 +19,13 @@ $catalogue_query = new WP_Query(
 );
 ?>
 
-<main id="main-content" class="home-main home-main--calm">
+<main id="main-content" class="home-main home-main--atelier">
+	<?php get_template_part( 'template-parts/home', 'intro' ); ?>
+
 	<?php
 	get_template_part(
 		'template-parts/home',
-		'intro',
+		'nouveautes',
 		array( 'query' => $spotlight_query )
 	);
 	?>
