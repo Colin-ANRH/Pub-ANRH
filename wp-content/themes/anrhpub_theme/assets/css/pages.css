@@ -303,143 +303,414 @@
   }
 }
 
-/* Page société */
-.section--societe {
-  padding: var(--space-section) 0;
+/* Page société — atelier ANRH Peyruis */
+.page-societe--atelier {
+  --societe-gap: clamp(2.75rem, 6vw, 4.75rem);
+  --societe-line: rgba(87, 54, 86, 0.1);
+  --societe-muted: #6f5d74;
 }
 
-.societe-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
-  gap: clamp(2rem, 5vw, 3.5rem);
-  align-items: start;
+.societe-hero {
+  padding: clamp(2rem, 5vw, 3.5rem) 0 clamp(2.25rem, 5vw, 3.75rem);
+  background:
+    radial-gradient(110% 80% at 100% 0%, rgba(236, 225, 240, 0.55) 0%, transparent 55%),
+    radial-gradient(90% 70% at 0% 100%, rgba(249, 228, 187, 0.32) 0%, transparent 50%),
+    var(--color-surface);
+  border-bottom: 1px solid var(--societe-line);
 }
 
-.societe-layout__main .entry-content {
-  max-width: none;
+.societe-hero__inner {
+  max-width: 38rem;
 }
 
-.societe-section {
-  margin-bottom: var(--space-block);
-  padding-bottom: var(--space-block);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.societe-section:last-of-type {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-.societe-section h2 {
+.societe-hero__brand {
   margin: 0 0 0.85rem;
-  font-size: 1.35rem;
+  font-family: var(--font-title);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   color: var(--color-prune);
 }
 
-.societe-section p {
-  margin: 0 0 0.85rem;
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--color-aubergine);
+.societe-hero__title {
+  margin: 0 0 1rem;
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--color-aubergine, var(--color-ink));
 }
 
-.societe-section p:last-child {
+.societe-hero__lead {
+  margin: 0 0 1.5rem;
+  max-width: 40ch;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--societe-muted);
+}
+
+.societe-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.societe-strip {
+  padding: 1.35rem 0;
+  border-bottom: 1px solid var(--societe-line);
+  background: rgba(255, 252, 248, 0.65);
+}
+
+.societe-strip__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.societe-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.societe-strip__value {
+  font-family: var(--font-title);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-prune);
+  line-height: 1.15;
+}
+
+.societe-strip__label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--societe-muted);
+}
+
+.societe-chapter {
+  padding: var(--societe-gap) 0;
+  border-bottom: 1px solid var(--societe-line);
+}
+
+.societe-chapter--tint {
+  background:
+    linear-gradient(180deg, rgba(236, 225, 240, 0.28) 0%, transparent 100%);
+}
+
+.societe-chapter__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+
+.societe-chapter__kicker {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+.societe-chapter__title {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(1.45rem, 2.8vw, 1.95rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--color-aubergine, var(--color-ink));
+}
+
+.societe-chapter__body {
+  max-width: 40rem;
+}
+
+.societe-chapter__body p {
+  margin: 0 0 1rem;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--color-aubergine, var(--color-text));
+}
+
+.societe-chapter__body p:last-child {
   margin-bottom: 0;
 }
 
+.societe-chapter__note {
+  margin-top: 1.25rem !important;
+  font-size: 0.9375rem !important;
+  color: var(--societe-muted) !important;
+}
+
+.societe-chapter__note a {
+  font-weight: 600;
+  color: var(--color-prune);
+  text-decoration: none;
+}
+
+.societe-chapter__note a:hover {
+  text-decoration: underline;
+}
+
+.societe-chapter__sep {
+  margin: 0 0.45rem;
+  opacity: 0.45;
+}
+
+.societe-quote {
+  margin: 1.35rem 0 0;
+  padding: 1.15rem 0 1.15rem 1.15rem;
+  border: 0;
+  border-left: 3px solid var(--color-orange);
+  background: transparent;
+}
+
+.societe-quote p {
+  margin: 0 !important;
+  font-family: var(--font-title);
+  font-size: 1.12rem !important;
+  font-weight: 600;
+  line-height: 1.55 !important;
+  letter-spacing: -0.015em;
+  color: var(--color-prune) !important;
+}
+
+.societe-iso {
+  padding: clamp(2rem, 4.5vw, 3rem) 0;
+  background:
+    linear-gradient(110deg, rgba(130, 74, 121, 0.08) 0%, rgba(249, 228, 187, 0.35) 100%);
+  border-bottom: 1px solid var(--societe-line);
+}
+
+.societe-iso__inner {
+  max-width: 42rem;
+}
+
+.societe-iso__kicker {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-prune);
+}
+
+.societe-iso__text {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: var(--color-aubergine, var(--color-ink));
+}
+
+.societe-marking {
+  padding: var(--societe-gap) 0;
+  border-bottom: 1px solid var(--societe-line);
+}
+
+.societe-marking__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.societe-marking__lead {
+  margin: 0.65rem 0 0;
+  max-width: 42ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--societe-muted);
+}
+
+.page-societe--atelier .marquage-tech--compact {
+  margin: 0;
+}
+
+.page-societe--atelier .marquage-tech__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-societe--atelier .marquage-tech__link {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  height: 100%;
+  padding: 1rem 1.05rem;
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--societe-line);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.page-societe--atelier .marquage-tech__link:hover,
+.page-societe--atelier .marquage-tech__link:focus-visible {
+  background: rgba(236, 225, 240, 0.35);
+  border-color: rgba(130, 74, 121, 0.25);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.page-societe--atelier .marquage-tech__visual {
+  flex-shrink: 0;
+}
+
+.page-societe--atelier .marquage-tech__glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-prune);
+  border: 1px solid var(--societe-line);
+  background: rgba(255, 252, 248, 0.8);
+}
+
+.page-societe--atelier .marquage-tech__title {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-aubergine, var(--color-ink));
+}
+
+.page-societe--atelier .marquage-tech__desc {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--societe-muted);
+}
+
+.societe-footer-cta {
+  padding: var(--societe-gap) 0 calc(var(--societe-gap) + 0.5rem);
+  background:
+    radial-gradient(80% 80% at 0% 100%, rgba(236, 225, 240, 0.45) 0%, transparent 55%),
+    var(--color-surface);
+}
+
+.societe-footer-cta__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem 2.5rem;
+}
+
+.societe-footer-cta__brand {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-prune);
+}
+
+.societe-footer-cta__title {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-title);
+  font-size: clamp(1.45rem, 2.8vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--color-aubergine, var(--color-ink));
+}
+
+.societe-footer-cta__lead {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--societe-muted);
+}
+
+.societe-footer-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .societe-strip__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .societe-chapter__grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .societe-strip__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .societe-marking__header {
+    align-items: stretch;
+  }
+
+  .societe-marking__header .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .societe-footer-cta__actions {
+    width: 100%;
+  }
+
+  .societe-footer-cta__actions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-societe--atelier .marquage-tech__link:hover,
+  .page-societe--atelier .marquage-tech__link:focus-visible {
+    transform: none;
+  }
+}
+
+/* Legacy societe classes (contenu WP sync) */
+.societe-section {
+  margin-bottom: 1.5rem;
+}
+
+.societe-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  color: var(--color-prune);
+}
+
 .societe-highlight {
-  margin: var(--space-block) 0 0;
-  padding: 1.25rem 1.35rem;
-  background: var(--color-lilas);
-  border: 1px solid var(--color-border);
-  border-left: 4px solid var(--color-orange);
-  border-radius: var(--radius-md);
+  margin-top: 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border-left: 3px solid var(--color-orange);
+  background: rgba(236, 225, 240, 0.35);
 }
 
 .societe-highlight p {
   margin: 0;
-  font-size: 0.9375rem;
   font-weight: 600;
-  line-height: 1.6;
   color: var(--color-prune);
-}
-
-.societe-marquage-teaser {
-  margin-top: var(--space-block);
-  padding-top: var(--space-block);
-  border-top: 1px solid var(--color-border);
-}
-
-.societe-marquage-teaser h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-}
-
-.societe-marquage-teaser > p {
-  margin: 0 0 1.25rem;
-  font-size: 0.9375rem;
-  line-height: 1.65;
-  color: var(--color-aubergine);
-}
-
-.societe-marquage-teaser__link {
-  margin: 1.5rem 0 0;
-  text-align: center;
-}
-
-.societe-layout__aside {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: calc(var(--header-h) + 1.5rem);
-}
-
-.societe-aside-card {
-  padding: 1.15rem 1.2rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.societe-aside-card__num {
-  display: block;
-  font-family: var(--font-accent);
-  font-size: 1.75rem;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--color-orange);
-  line-height: 1;
-  margin-bottom: 0.35rem;
-}
-
-.societe-aside-card h3 {
-  margin: 0 0 0.4rem;
-  font-size: 1rem;
-  color: var(--color-prune);
-}
-
-.societe-aside-card p {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.55;
-  color: var(--color-aubergine);
-}
-
-.societe-aside-card--iso {
-  background: var(--color-lilas);
-}
-
-.societe-aside-card--link a {
-  font-weight: 700;
-  text-decoration: underline;
-}
-
-.societe-aside-card--cta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  background: var(--color-lilas);
 }
 
 /* Page marquage */
@@ -657,12 +928,10 @@
 }
 
 @media (max-width: 991px) {
-  .societe-layout,
   .marquage-detail {
     grid-template-columns: 1fr;
   }
 
-  .societe-layout__aside,
   .marquage-detail__nav {
     position: static;
   }
