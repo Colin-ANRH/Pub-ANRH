@@ -422,14 +422,18 @@ function anrhpub_is_product_favorite( $post_id = 0, $user_id = 0 ) {
  *
  * @param int $post_id Product ID.
  */
-function anrhpub_render_favorite_button( $post_id = 0 ) {
+function anrhpub_render_favorite_button( $post_id = 0, $variant = '' ) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 
 	if ( ! $post_id || 'anr_product' !== get_post_type( $post_id ) ) {
 		return;
 	}
 
-	$is_fav    = anrhpub_is_product_favorite( $post_id );
+	if ( '' === $variant ) {
+		$variant = is_singular( 'anr_product' ) ? 'single' : 'card';
+	}
+
+	$is_fav    = anrhpub_is_client_logged_in() && anrhpub_is_product_favorite( $post_id );
 	$logged_in = anrhpub_is_client_logged_in();
 
 	get_template_part(
@@ -439,6 +443,7 @@ function anrhpub_render_favorite_button( $post_id = 0 ) {
 			'post_id'   => $post_id,
 			'is_fav'    => $is_fav,
 			'logged_in' => $logged_in,
+			'variant'   => $variant,
 		)
 	);
 }
@@ -457,6 +462,10 @@ function anrhpub_get_account_notice() {
 		'login_required' => array(
 			'type'    => 'info',
 			'message' => __( 'Connectez-vous pour accéder à votre compte et vos favoris.', 'anrhpub_theme' ),
+		),
+		'favorite_login' => array(
+			'type'    => 'info',
+			'message' => __( 'Connectez-vous avec votre compte client pour enregistrer des favoris.', 'anrhpub_theme' ),
 		),
 		'not_client'     => array(
 			'type'    => 'info',
@@ -934,10 +943,30 @@ function anrhpub_ajax_toggle_favorite() {
 			'message' => $active
 				? __( 'Produit ajouté à vos favoris.', 'anrhpub_theme' )
 				: __( 'Produit retiré de vos favoris.', 'anrhpub_theme' ),
+			'label'   => $active
+				? __( 'Retirer des favoris', 'anrhpub_theme' )
+				: __( 'Ajouter aux favoris', 'anrhpub_theme' ),
+			'text'    => $active
+				? __( 'Dans mes favoris', 'anrhpub_theme' )
+				: __( 'Favoris', 'anrhpub_theme' ),
 		)
 	);
 }
 add_action( 'wp_ajax_anrhpub_toggle_favorite', 'anrhpub_ajax_toggle_favorite' );
+
+/**
+ * AJAX nopriv — favoris réservés aux clients connectés.
+ */
+function anrhpub_ajax_toggle_favorite_guest() {
+	wp_send_json_error(
+		array(
+			'message'   => __( 'Connectez-vous pour enregistrer des favoris.', 'anrhpub_theme' ),
+			'login_url' => anrhpub_login_url(),
+		),
+		401
+	);
+}
+add_action( 'wp_ajax_nopriv_anrhpub_toggle_favorite', 'anrhpub_ajax_toggle_favorite_guest' );
 
 /**
  * AJAX — liste favoris (HTML grille) pour rafraîchissement profil.

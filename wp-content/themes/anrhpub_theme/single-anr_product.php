@@ -13,7 +13,6 @@ get_header();
 		<article <?php post_class(); ?> data-animate>
 			<div class="container product-single__layout">
 				<div class="product-single__gallery-wrap">
-					<?php anrhpub_render_favorite_button(); ?>
 					<?php
 					if ( function_exists( 'anrhpub_render_product_gallery' ) ) {
 						anrhpub_render_product_gallery();
@@ -63,6 +62,7 @@ get_header();
 					<?php anrhpub_render_product_quote_form(); ?>
 
 					<div class="product-single__actions">
+						<?php anrhpub_render_favorite_button( get_the_ID(), 'single' ); ?>
 						<button type="button" class="btn btn--outline" data-compare-add data-product-id="<?php echo esc_attr( (string) get_the_ID() ); ?>" data-label-off="<?php esc_attr_e( 'Comparer', 'anrhpub_theme' ); ?>" data-label-on="<?php esc_attr_e( 'Dans le comparateur', 'anrhpub_theme' ); ?>" aria-pressed="false">
 							<span data-compare-label><?php esc_html_e( 'Comparer', 'anrhpub_theme' ); ?></span>
 						</button>

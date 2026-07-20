@@ -1103,12 +1103,19 @@ function initAccountToasts() {
         return;
       }
 
+      // Invité : lien vers /connexion (pas de toggle sans compte).
+      if (btn.getAttribute('data-favorite-login') === '1' || btn.classList.contains('product-favorite--guest')) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
 
-      if (!cfg.isLoggedIn) {
-        var loginUrl = new URL(cfg.loginUrl, window.location.origin);
+      if (!cfg || !cfg.isLoggedIn) {
+        var loginBase = (cfg && cfg.loginUrl) ? cfg.loginUrl : '/connexion/';
+        var loginUrl = new URL(loginBase, window.location.origin);
         loginUrl.searchParams.set('redirect_to', window.location.href);
+        loginUrl.searchParams.set('account_notice', 'favorite_login');
         window.location.href = loginUrl.toString();
         return;
       }
@@ -1131,13 +1138,25 @@ function initAccountToasts() {
         })
         .then(function (res) {
           if (!res.success) {
+            if (res.data && res.data.login_url) {
+              var failUrl = new URL(res.data.login_url, window.location.origin);
+              failUrl.searchParams.set('redirect_to', window.location.href);
+              failUrl.searchParams.set('account_notice', 'favorite_login');
+              window.location.href = failUrl.toString();
+              return;
+            }
             throw new Error('toggle failed');
           }
           var active = !!res.data.active;
           btn.classList.toggle('is-active', active);
           btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-          btn.setAttribute('aria-label', active ? cfg.i18n.remove : cfg.i18n.add);
-          btn.setAttribute('title', active ? cfg.i18n.remove : cfg.i18n.add);
+          var label = res.data.label || (active ? cfg.i18n.remove : cfg.i18n.add);
+          btn.setAttribute('aria-label', label);
+          btn.setAttribute('title', label);
+          var textEl = btn.querySelector('.product-favorite__text');
+          if (textEl && res.data.text) {
+            textEl.textContent = res.data.text;
+          }
           if (typeof res.data.count === 'number') {
             updateNavCount(res.data.count);
           }
