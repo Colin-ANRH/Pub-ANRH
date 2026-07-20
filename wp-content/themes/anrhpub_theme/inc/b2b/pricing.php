@@ -174,7 +174,7 @@ function anrhpub_get_product_price_label( $post_id = 0, $qty = 1 ) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 
 	if ( ! anrhpub_can_view_prices() ) {
-		return __( 'Sur devis — connectez-vous (compte validé)', 'anrhpub_theme' );
+		return __( 'Sur devis', 'anrhpub_theme' );
 	}
 
 	$ht = anrhpub_get_unit_price_ht( $post_id, $qty );

@@ -411,11 +411,13 @@
 }
 
 .product-card__compare {
-  margin-top: 0.35rem;
+  margin-top: 0;
 }
 
 .product-card__compare[data-compare-add] {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   font-size: 0.8125rem;
   padding: 0.4rem 0.65rem;
 }

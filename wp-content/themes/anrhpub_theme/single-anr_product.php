@@ -49,7 +49,15 @@ get_header();
 					<?php if ( function_exists( 'anrhpub_can_view_prices' ) && anrhpub_can_view_prices() && function_exists( 'anrhpub_get_client_payment_terms_label' ) ) : ?>
 						<p class="product-single__payment-terms"><small><?php echo esc_html( anrhpub_get_client_payment_terms_label() ); ?></small></p>
 					<?php else : ?>
-						<span class="product-single__price-note"><?php esc_html_e( 'Tarif établi sur devis selon quantité et marquage.', 'anrhpub_theme' ); ?></span>
+						<span class="product-single__price-note">
+							<?php
+							if ( function_exists( 'anrhpub_can_view_prices' ) && ! anrhpub_can_view_prices() ) {
+								esc_html_e( 'Tarifs réservés aux comptes clients validés. Connectez-vous pour les consulter.', 'anrhpub_theme' );
+							} else {
+								esc_html_e( 'Tarif établi sur devis selon quantité et marquage.', 'anrhpub_theme' );
+							}
+							?>
+						</span>
 					<?php endif; ?>
 
 					<?php anrhpub_render_product_quote_form(); ?>

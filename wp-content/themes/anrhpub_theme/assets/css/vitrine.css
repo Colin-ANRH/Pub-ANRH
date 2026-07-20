@@ -206,7 +206,21 @@
 }
 
 .product-card__footer {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem 0.55rem;
+}
+
+.product-card__footer .product-card__price {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.product-card__footer .product-card__compare {
+  grid-column: 1;
+  width: 100%;
+  margin: 0;
 }
 
 /* Sidebar catalogue — accordéon sobre (sans animation de hauteur) */

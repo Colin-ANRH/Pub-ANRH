@@ -916,6 +916,15 @@ body.admin-bar .site-header {
   flex-wrap: wrap;
   gap: 0.65rem;
   align-items: center;
+  max-width: 100%;
+}
+
+.product-single__actions .btn,
+.product-single__actions .product-favorite {
+  flex: 1 1 auto;
+  min-width: min(100%, 9.5rem);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Commandes */
