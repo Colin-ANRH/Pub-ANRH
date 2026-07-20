@@ -109,6 +109,11 @@ function anrhpub_render_product_single_sections( $post_id = 0 ) {
 	$excerpt  = get_the_excerpt( $post_id );
 	$content  = get_post_field( 'post_content', $post_id );
 	$details  = get_post_meta( $post_id, 'anr_details', true );
+
+	if ( function_exists( 'anrhpub_normalize_utf8_text' ) ) {
+		$content = anrhpub_normalize_utf8_text( (string) $content );
+		$details = anrhpub_normalize_utf8_text( (string) $details );
+	}
 	$tech_rows = function_exists( 'anrhpub_get_product_technical_sheet_rows' )
 		? anrhpub_get_product_technical_sheet_rows( $post_id )
 		: array();

@@ -81,7 +81,11 @@ function anrhpub_seo_get_context() {
 			} elseif ( has_excerpt( $post ) ) {
 				$ctx['description'] = wp_strip_all_tags( get_the_excerpt( $post ) );
 			} else {
-				$ctx['description'] = wp_trim_words( wp_strip_all_tags( $post->post_content ), 28, '…' );
+				$desc = wp_strip_all_tags( $post->post_content );
+				if ( function_exists( 'anrhpub_normalize_utf8_text' ) ) {
+					$desc = anrhpub_normalize_utf8_text( $desc );
+				}
+				$ctx['description'] = wp_trim_words( $desc, 28, '…' );
 			}
 
 			if ( has_post_thumbnail( $post ) ) {

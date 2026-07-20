@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_CHARSET_REPAIR_VERSION', 3 );
+define( 'ANRHPUB_CHARSET_REPAIR_VERSION', 4 );
 
 /**
  * Chaîne de référence (texte démo produit).
@@ -30,6 +30,81 @@ function anrhpub_string_looks_mojibake( $text ) {
 	}
 
 	return (bool) preg_match( '/Ã.|â[\x80-\xBF]|ÔÇ.|├.|ï¿½/u', $text );
+}
+
+/**
+ * Détecte les restes d’une demi-réparation CP850 (ex. « intensit®s », « Sac á dos »).
+ *
+ * Après export Windows, « é » devient « ├® ». Si le « ├ » est retiré sans reconstruire
+ * l’UTF-8, il reste un « ® » orphelin au milieu des mots.
+ *
+ * @param string $text Texte.
+ * @return bool
+ */
+function anrhpub_string_looks_half_mojibake( $text ) {
+	if ( ! is_string( $text ) || $text === '' ) {
+		return false;
+	}
+
+	// ® collé à une lettre (jamais un vrai trademark de catalogue).
+	if ( preg_match( '/\p{L}\x{00AE}|\x{00AE}\p{L}/u', $text ) ) {
+		return true;
+	}
+
+	// « á » isolé à la place de « à » (préposition / fin de mot).
+	if ( preg_match( '/(?<=\s|\A)\x{00E1}(?=\s|\z)/u', $text ) ) {
+		return true;
+	}
+
+	// Autres seconds octets CP850 orphelins au milieu d’un mot.
+	return (bool) preg_match( '/\p{L}[\x{00BF}\x{00AC}\x{00AA}\x{00BA}\x{00A1}\x{00BD}]\p{L}/u', $text );
+}
+
+/**
+ * Texte à normaliser (mojibake complet ou demi-réparation).
+ *
+ * @param string $text Texte.
+ * @return bool
+ */
+function anrhpub_string_needs_utf8_fix( $text ) {
+	return anrhpub_string_looks_mojibake( $text ) || anrhpub_string_looks_half_mojibake( $text );
+}
+
+/**
+ * Répare les caractères orphelins laissés par une demi-réparation CP850.
+ *
+ * @param string $text Texte.
+ * @return string
+ */
+function anrhpub_fix_half_mojibake_string( $text ) {
+	if ( ! anrhpub_string_looks_half_mojibake( $text ) ) {
+		return $text;
+	}
+
+	// ├® → é : le « ├ » a disparu, il reste « ® ».
+	$text = preg_replace( '/(?<=\p{L})\x{00AE}/u', 'é', $text );
+	$text = preg_replace( '/\x{00AE}(?=\p{L})/u', 'é', $text );
+
+	// ├á → à : il reste « á » isolé.
+	$text = preg_replace( '/(?<=\s|\A)\x{00E1}(?=\s|\z)/u', 'à', $text );
+
+	$orphan_map = array(
+		"\u{00BF}" => 'è', // ¿
+		"\u{00AC}" => 'ê', // ¬
+		"\u{00AA}" => 'ê', // ª (variante)
+		"\u{00BA}" => 'ç', // º
+		"\u{00A1}" => 'í', // ¡
+		"\u{00BD}" => 'ë', // ½
+	);
+
+	return (string) preg_replace_callback(
+		'/(?<=\p{L})([\x{00BF}\x{00AC}\x{00AA}\x{00BA}\x{00A1}\x{00BD}])(?=\p{L})/u',
+		static function ( $matches ) use ( $orphan_map ) {
+			$char = $matches[1];
+			return $orphan_map[ $char ] ?? $char;
+		},
+		$text
+	);
 }
 
 /**
@@ -58,6 +133,7 @@ function anrhpub_pick_best_utf8_candidate( array $candidates ) {
 		$score -= 2 * substr_count( $candidate, 'â' );
 		$score -= 5 * substr_count( $candidate, '├' );
 		$score -= 5 * substr_count( $candidate, "\u{FFFD}" );
+		$score -= 4 * preg_match_all( '/\p{L}\x{00AE}|\x{00AE}\p{L}/u', $candidate, $mm );
 
 		if ( $score > $best_score ) {
 			$best_score = $score;
@@ -80,7 +156,7 @@ function anrhpub_fix_mojibake_string( $text ) {
 	}
 
 	if ( ! anrhpub_string_looks_mojibake( $text ) ) {
-		return $text;
+		return anrhpub_fix_half_mojibake_string( $text );
 	}
 
 	$candidates = array( $text );
@@ -113,8 +189,9 @@ function anrhpub_fix_mojibake_string( $text ) {
 	}
 
 	$fixed = anrhpub_pick_best_utf8_candidate( $candidates );
+	$fixed = $fixed !== '' ? $fixed : $text;
 
-	return $fixed !== '' ? $fixed : $text;
+	return anrhpub_fix_half_mojibake_string( $fixed );
 }
 
 /**
@@ -134,6 +211,25 @@ function anrhpub_normalize_utf8_text( $text ) {
 }
 
 /**
+ * Filtre d’affichage : corrige les accents cassés sans attendre la réparation admin.
+ *
+ * @param string $text Texte.
+ * @return string
+ */
+function anrhpub_filter_display_utf8( $text ) {
+	if ( ! is_string( $text ) || $text === '' || ! anrhpub_string_needs_utf8_fix( $text ) ) {
+		return $text;
+	}
+
+	return anrhpub_normalize_utf8_text( $text );
+}
+add_filter( 'the_title', 'anrhpub_filter_display_utf8', 9 );
+add_filter( 'the_content', 'anrhpub_filter_display_utf8', 9 );
+add_filter( 'get_the_excerpt', 'anrhpub_filter_display_utf8', 9 );
+add_filter( 'single_term_title', 'anrhpub_filter_display_utf8', 9 );
+add_filter( 'wp_get_attachment_caption', 'anrhpub_filter_display_utf8', 9 );
+
+/**
  * Réparation globale base de contenus (une fois par version).
  *
  * @return array{posts: int, meta: int, terms: int, options: int}
@@ -146,6 +242,7 @@ function anrhpub_run_charset_repair() {
 		'meta'    => 0,
 		'terms'   => 0,
 		'options' => 0,
+		'demo'    => 0,
 	);
 
 	$post_types = array( 'anr_product', 'page', 'post', 'anr_quote' );
@@ -193,7 +290,10 @@ function anrhpub_run_charset_repair() {
 			OR meta_value LIKE '%├%'
 			OR meta_value LIKE '%ï¿½%'
 			OR meta_value LIKE '%║%'
-			OR meta_value LIKE '%▒%'",
+			OR meta_value LIKE '%▒%'
+			OR meta_value LIKE '%®%'
+			OR meta_value LIKE '%¿%'
+			OR meta_value LIKE '%¬%'",
 		ARRAY_A
 	);
 
@@ -253,7 +353,82 @@ function anrhpub_run_charset_repair() {
 		update_option( 'blog_charset', 'UTF-8' );
 	}
 
+	$stats['demo'] = anrhpub_resync_demo_product_texts();
+
 	return $stats;
+}
+
+/**
+ * Réécrit les textes produits démo « nouveautés » depuis le PHP source (accents garantis).
+ *
+ * @return int Nombre de produits mis à jour.
+ */
+function anrhpub_resync_demo_product_texts() {
+	if ( ! function_exists( 'anrhpub_get_nouveaute_demo_products' ) ) {
+		return 0;
+	}
+
+	$products = anrhpub_get_nouveaute_demo_products();
+	if ( ! is_array( $products ) || ! $products ) {
+		return 0;
+	}
+
+	$updated = 0;
+
+	foreach ( $products as $product ) {
+		if ( empty( $product['ref'] ) || empty( $product['excerpt'] ) ) {
+			continue;
+		}
+
+		$found = get_posts(
+			array(
+				'post_type'      => 'anr_product',
+				'post_status'    => 'any',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'meta_key'       => 'anr_reference',
+				'meta_value'     => (string) $product['ref'],
+			)
+		);
+
+		if ( empty( $found ) ) {
+			continue;
+		}
+
+		$post_id = (int) $found[0];
+		$excerpt = (string) $product['excerpt'];
+		$content = '<p>' . esc_html( $excerpt ) . '</p><p><em>' . esc_html( anrhpub_demo_product_disclaimer() ) . '</em></p>';
+		$title   = isset( $product['title'] ) ? (string) $product['title'] : '';
+		$updates = array( 'ID' => $post_id );
+		$changed = false;
+		$current = get_post( $post_id );
+
+		if ( ! $current ) {
+			continue;
+		}
+
+		if ( $title && $current->post_title !== $title ) {
+			$updates['post_title'] = $title;
+			$changed               = true;
+		}
+
+		if ( $current->post_excerpt !== $excerpt ) {
+			$updates['post_excerpt'] = $excerpt;
+			$changed                 = true;
+		}
+
+		if ( $current->post_content !== $content ) {
+			$updates['post_content'] = $content;
+			$changed                 = true;
+		}
+
+		if ( $changed ) {
+			wp_update_post( $updates, true );
+			++$updated;
+		}
+	}
+
+	return $updated;
 }
 
 /**
@@ -308,7 +483,7 @@ function anrhpub_charset_repair_admin_notice() {
 		return;
 	}
 
-	$total = (int) $stats['posts'] + (int) $stats['meta'] + (int) $stats['terms'] + (int) $stats['options'];
+	$total = (int) $stats['posts'] + (int) $stats['meta'] + (int) $stats['terms'] + (int) $stats['options'] + (int) ( $stats['demo'] ?? 0 );
 	if ( $total <= 0 ) {
 		return;
 	}
