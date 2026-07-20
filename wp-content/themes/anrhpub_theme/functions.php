@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_THEME_VERSION', '2.41.1' );
+define( 'ANRHPUB_THEME_VERSION', '2.42.0' );
 define( 'ANRHPUB_THEME_DIR', get_template_directory() );
 define( 'ANRHPUB_THEME_URI', get_template_directory_uri() );
 

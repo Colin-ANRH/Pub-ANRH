@@ -2211,6 +2211,21 @@ function initAutoCarousel(root, options) {
       });
     });
 
+    var prevBtn = root.querySelector('[data-home-slider-prev]');
+    var nextBtn = root.querySelector('[data-home-slider-next]');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function () {
+        goTo(current - 1);
+        startAuto();
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        goTo(current + 1);
+        startAuto();
+      });
+    }
+
     root.addEventListener('mouseenter', stopAuto);
     root.addEventListener('mouseleave', startAuto);
     root.addEventListener('focusin', stopAuto);
@@ -2225,7 +2240,17 @@ function initAutoCarousel(root, options) {
   }
 
   function initHomeSlider() {
-    /* Visuels accueil : affichage statique des 3 images (home-slider--trio). */
+    var root = document.querySelector('[data-home-hero-slider]');
+    if (!root) {
+      return;
+    }
+
+    var cfg = window.anrhpubHomeSlider || {};
+    initAutoCarousel(root, {
+      slideSelector: '.home-hero-slider__slide',
+      dotSelector: '[data-home-slider-dot]',
+      interval: cfg.interval || 5000
+    });
   }
 
   function initHomeSpotlight() {

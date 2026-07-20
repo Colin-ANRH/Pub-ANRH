@@ -1,6 +1,6 @@
 <?php
 /**
- * Accueil — hero épuré : marque, promesse, visuel.
+ * Accueil — hero épuré : marque, promesse, slider visuel.
  *
  * @package anrhpub_theme
  * @var array $args { query?: WP_Query } Conservé pour compatibilité.
@@ -9,9 +9,7 @@
 defined( 'ABSPATH' ) || exit;
 
 $slides = function_exists( 'anrhpub_get_home_slider_slides' ) ? anrhpub_get_home_slider_slides() : array();
-$hero   = ! empty( $slides[0] ) ? $slides[0] : null;
-$side_a = ! empty( $slides[1] ) ? $slides[1] : null;
-$side_b = ! empty( $slides[2] ) ? $slides[2] : null;
+$count  = count( $slides );
 ?>
 <section class="home-hero" data-animate aria-label="<?php esc_attr_e( 'Présentation ANRH Peyruis', 'anrhpub_theme' ); ?>">
 	<div class="container home-hero__grid">
@@ -34,35 +32,52 @@ $side_b = ! empty( $slides[2] ) ? $slides[2] : null;
 			</div>
 		</div>
 
-		<?php if ( $hero ) : ?>
-			<div class="home-hero__visual" aria-label="<?php esc_attr_e( 'Visuels catalogue', 'anrhpub_theme' ); ?>">
-				<figure class="home-hero__figure home-hero__figure--main">
-					<img
-						src="<?php echo esc_url( $hero['src'] ); ?>"
-						alt="<?php echo esc_attr( $hero['alt'] ); ?>"
-						fetchpriority="high"
-						decoding="async"
-					/>
-				</figure>
-				<?php if ( $side_a ) : ?>
-					<figure class="home-hero__figure home-hero__figure--a">
-						<img
-							src="<?php echo esc_url( $side_a['src'] ); ?>"
-							alt="<?php echo esc_attr( $side_a['alt'] ); ?>"
-							loading="lazy"
-							decoding="async"
-						/>
-					</figure>
-				<?php endif; ?>
-				<?php if ( $side_b ) : ?>
-					<figure class="home-hero__figure home-hero__figure--b">
-						<img
-							src="<?php echo esc_url( $side_b['src'] ); ?>"
-							alt="<?php echo esc_attr( $side_b['alt'] ); ?>"
-							loading="lazy"
-							decoding="async"
-						/>
-					</figure>
+		<?php if ( $count > 0 ) : ?>
+			<div
+				class="home-hero__visual home-hero-slider<?php echo $count > 1 ? ' home-hero-slider--multi' : ''; ?>"
+				<?php echo $count > 1 ? ' data-home-hero-slider' : ''; ?>
+				aria-roledescription="<?php echo $count > 1 ? 'carousel' : 'img'; ?>"
+				aria-label="<?php esc_attr_e( 'Visuels catalogue', 'anrhpub_theme' ); ?>"
+			>
+				<div class="home-hero-slider__viewport">
+					<?php foreach ( $slides as $index => $slide ) : ?>
+						<figure
+							class="home-hero-slider__slide<?php echo 0 === $index ? ' is-active' : ''; ?>"
+							<?php echo 0 !== $index ? ' hidden' : ''; ?>
+							data-carousel-slide
+						>
+							<img
+								src="<?php echo esc_url( $slide['src'] ); ?>"
+								alt="<?php echo esc_attr( $slide['alt'] ); ?>"
+								<?php echo 0 === $index ? ' fetchpriority="high"' : ' loading="lazy"'; ?>
+								decoding="async"
+							/>
+						</figure>
+					<?php endforeach; ?>
+				</div>
+
+				<?php if ( $count > 1 ) : ?>
+					<div class="home-hero-slider__controls">
+						<button type="button" class="home-hero-slider__nav home-hero-slider__nav--prev" data-home-slider-prev aria-label="<?php esc_attr_e( 'Image précédente', 'anrhpub_theme' ); ?>">
+							<span aria-hidden="true">‹</span>
+						</button>
+						<div class="home-hero-slider__dots" role="tablist" aria-label="<?php esc_attr_e( 'Choisir une image', 'anrhpub_theme' ); ?>">
+							<?php for ( $i = 0; $i < $count; $i++ ) : ?>
+								<button
+									type="button"
+									class="home-hero-slider__dot<?php echo 0 === $i ? ' is-active' : ''; ?>"
+									data-home-slider-dot
+									data-slide-index="<?php echo esc_attr( (string) $i ); ?>"
+									role="tab"
+									aria-selected="<?php echo 0 === $i ? 'true' : 'false'; ?>"
+									aria-label="<?php echo esc_attr( sprintf( __( 'Image %d', 'anrhpub_theme' ), $i + 1 ) ); ?>"
+								></button>
+							<?php endfor; ?>
+						</div>
+						<button type="button" class="home-hero-slider__nav home-hero-slider__nav--next" data-home-slider-next aria-label="<?php esc_attr_e( 'Image suivante', 'anrhpub_theme' ); ?>">
+							<span aria-hidden="true">›</span>
+						</button>
+					</div>
 				<?php endif; ?>
 			</div>
 		<?php endif; ?>
