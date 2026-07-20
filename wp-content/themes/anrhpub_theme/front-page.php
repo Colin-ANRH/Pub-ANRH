@@ -19,7 +19,7 @@ $catalogue_query = new WP_Query(
 );
 ?>
 
-<main id="main-content" class="home-main">
+<main id="main-content" class="home-main home-main--calm">
 	<?php
 	get_template_part(
 		'template-parts/home',
