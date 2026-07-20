@@ -324,7 +324,7 @@ function anrhpub_export_newsletter_csv() {
 	header( 'Content-Disposition: attachment; filename=' . $filename );
 
 	$out = fopen( 'php://output', 'w' );
-	fputcsv( $out, array( 'email', 'statut', 'inscription', 'modifie' ), ';' );
+	fputcsv( $out, array( 'email', 'statut', 'inscription', 'modifié' ), ';' );
 
 	foreach ( $posts as $post ) {
 		$at = get_post_meta( $post->ID, 'anr_subscribed_at', true );

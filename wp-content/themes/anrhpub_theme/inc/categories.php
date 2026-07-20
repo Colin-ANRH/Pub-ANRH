@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_CATEGORIES_VERSION', 2 );
+define( 'ANRHPUB_CATEGORIES_VERSION', 3 );
 
 /**
  * Full category hierarchy.
@@ -17,7 +17,7 @@ define( 'ANRHPUB_CATEGORIES_VERSION', 2 );
 function anrhpub_get_category_tree() {
 	return array(
 		'ecriture'                  => array(
-			'name'     => 'Ecriture',
+			'name'     => 'Écriture',
 			'children' => array(
 				'stylos'    => 'Stylos',
 				'parure'    => 'Parure',

@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ANRHPUB_CHARSET_REPAIR_VERSION', 2 );
+define( 'ANRHPUB_CHARSET_REPAIR_VERSION', 3 );
 
 /**
  * Chaîne de référence (texte démo produit).
@@ -91,19 +91,23 @@ function anrhpub_fix_mojibake_string( $text ) {
 	}
 
 	if ( function_exists( 'iconv' ) ) {
-		$bytes = @iconv( 'UTF-8', 'ISO-8859-1//IGNORE', $text );
-		if ( is_string( $bytes ) && $bytes !== '' ) {
-			$utf8 = @iconv( 'ISO-8859-1', 'UTF-8//IGNORE', $bytes );
+		/*
+		 * Export SQL Windows : octets UTF-8 relus en CP850 puis ré-enregistrés en UTF-8
+		 * (ex. « é » → « ├® », « à » → « ├á »). L’inverse CP850 restaure l’UTF-8 d’origine.
+		 */
+		foreach ( array( 'CP850', 'CP437', 'Windows-1252', 'ISO-8859-1' ) as $from_enc ) {
+			$bytes = @iconv( 'UTF-8', $from_enc . '//IGNORE', $text );
+			if ( ! is_string( $bytes ) || $bytes === '' ) {
+				continue;
+			}
+
+			if ( mb_check_encoding( $bytes, 'UTF-8' ) ) {
+				$candidates[] = $bytes;
+			}
+
+			$utf8 = @iconv( $from_enc, 'UTF-8//IGNORE', $bytes );
 			if ( is_string( $utf8 ) && $utf8 !== '' ) {
 				$candidates[] = $utf8;
-			}
-		}
-
-		$win = @iconv( 'UTF-8', 'Windows-1252//IGNORE', $text );
-		if ( is_string( $win ) && $win !== '' ) {
-			$utf8_win = @iconv( 'Windows-1252', 'UTF-8//IGNORE', $win );
-			if ( is_string( $utf8_win ) && $utf8_win !== '' ) {
-				$candidates[] = $utf8_win;
 			}
 		}
 	}
@@ -183,7 +187,13 @@ function anrhpub_run_charset_repair() {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	$meta_rows = $wpdb->get_results(
 		"SELECT meta_id, meta_value FROM {$wpdb->postmeta}
-		WHERE meta_value LIKE '%Ã%' OR meta_value LIKE '%â%' OR meta_value LIKE '%ÔÇ%' OR meta_value LIKE '%├%' OR meta_value LIKE '%ï¿½%'",
+		WHERE meta_value LIKE '%Ã%'
+			OR meta_value LIKE '%â%'
+			OR meta_value LIKE '%ÔÇ%'
+			OR meta_value LIKE '%├%'
+			OR meta_value LIKE '%ï¿½%'
+			OR meta_value LIKE '%║%'
+			OR meta_value LIKE '%▒%'",
 		ARRAY_A
 	);
 

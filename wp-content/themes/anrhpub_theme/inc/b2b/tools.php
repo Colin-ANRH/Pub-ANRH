@@ -152,7 +152,7 @@ function anrhpub_handle_cart_export() {
 
 	$items = anrhpub_get_user_quote_cart_raw();
 
-	$rows   = array( array( 'Reference', 'Produit', 'Quantite', 'Couleur', 'Prix HT' ) );
+	$rows   = array( array( 'Référence', 'Produit', 'Quantité', 'Couleur', 'Prix HT' ) );
 	$lines  = function_exists( 'anrhpub_enrich_quote_cart_items' ) ? anrhpub_enrich_quote_cart_items( $items ) : array();
 
 	foreach ( $lines as $line ) {
