@@ -108,6 +108,7 @@ jobs:
 
           # .htaccess production : pas de blocage/noindex staging
           cp deploy-ovh/htaccess.production.snippet deploy-bundle/.htaccess
+          cp deploy-ovh/robots.production.txt deploy-bundle/robots.txt
 
           cp *.php deploy-bundle/
 
@@ -136,7 +137,6 @@ jobs:
           rm -f deploy-bundle/staging-health.php
           rm -f deploy-bundle/unzip-staging.php
           rm -f deploy-bundle/purge-prod-products.php
-          rm -f deploy-bundle/robots.txt
 
           echo "REMOTE_DIR=pub.anrh.fr/" >> $GITHUB_ENV
 
@@ -168,7 +168,6 @@ jobs:
             rm -f staging-health.php;
             rm -f unzip-staging.php;
             rm -f purge-prod-products.php;
-            rm -f robots.txt;
             bye
           " || echo "::warning::Suppression FTP partielle — verifiez manuellement anrh-staging-gate.php"
 

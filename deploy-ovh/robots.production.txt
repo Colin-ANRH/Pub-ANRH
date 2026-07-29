@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+Disallow: /wp-includes/
+Disallow: /panier-devis/
+Disallow: /mon-compte/
+Disallow: /connexion/
+Disallow: /inscription/
+
+Sitemap: https://pub.anrh.fr/wp-sitemap.xml
