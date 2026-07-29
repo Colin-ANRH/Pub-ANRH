@@ -1,0 +1,49 @@
+name: Purge produits PROD (anr_product)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: purge-prod-products
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Préparer le script one-shot
+        env:
+          DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
+        run: |
+          if [ -z "$DEPLOY_UNZIP_TOKEN" ]; then
+            echo "::error::DEPLOY_UNZIP_TOKEN manquant"
+            exit 1
+          fi
+          mkdir -p purge-bundle
+          sed "s/CHANGE_ME/${DEPLOY_UNZIP_TOKEN}/" deploy-ovh/purge-prod-products.php > purge-bundle/purge-prod-products.php
+
+      - name: Uploader le script sur prod (FTP)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: purge-bundle/
+          server-dir: pub.anrh.fr/
+          state-name: ovh-pub-anrh-fr-purge-products
+          log-level: standard
+
+      - name: Exécuter la purge
+        env:
+          DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
+        run: |
+          URL="https://pub.anrh.fr/purge-prod-products.php?token=${DEPLOY_UNZIP_TOKEN}"
+          echo "Appel purge..."
+          body=$(curl -fsS --max-time 300 "$URL")
+          echo "$body"
+          echo "$body" | grep -q "Purge produits PROD terminee"
+          echo "$body" | grep -q "Restants publish=0"
