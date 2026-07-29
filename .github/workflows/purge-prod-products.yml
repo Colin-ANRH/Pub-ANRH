@@ -15,26 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Préparer le script one-shot
-        env:
-          DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
+      - name: Préparer mu-plugin one-shot
         run: |
-          if [ -z "$DEPLOY_UNZIP_TOKEN" ]; then
-            echo "::error::DEPLOY_UNZIP_TOKEN manquant"
-            exit 1
-          fi
-          mkdir -p purge-bundle
-          php -r '
-            $token = getenv("DEPLOY_UNZIP_TOKEN");
-            $src = file_get_contents("deploy-ovh/purge-prod-products.php");
-            if ($src === false) { fwrite(STDERR, "source missing\n"); exit(1); }
-            $out = str_replace("CHANGE_ME", $token, $src);
-            if (!is_dir("purge-bundle")) { mkdir("purge-bundle"); }
-            file_put_contents("purge-bundle/purge-prod-products.php", $out);
-            echo "script pret\n";
-          '
+          mkdir -p purge-bundle/wp-content/mu-plugins
+          cp deploy-ovh/anrh-purge-prod-products-once.php purge-bundle/wp-content/mu-plugins/
 
-      - name: Uploader le script sur prod (FTP)
+      - name: Uploader mu-plugin sur prod (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.OVH_FTP_SERVER }}
@@ -42,20 +28,11 @@ jobs:
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: purge-bundle/
           server-dir: pub.anrh.fr/
-          state-name: ovh-pub-anrh-fr-purge-products
+          state-name: ovh-pub-anrh-fr-purge-products-mu
           log-level: standard
 
-      - name: Exécuter la purge
-        env:
-          DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
+      - name: Instructions
         run: |
-          echo "Appel purge (POST)..."
-          code=$(curl -sS -o /tmp/purge-out.txt -w "%{http_code}" --max-time 300 \
-            -X POST \
-            --data-urlencode "token=${DEPLOY_UNZIP_TOKEN}" \
-            "https://pub.anrh.fr/purge-prod-products.php" || echo "000")
-          echo "HTTP $code"
-          cat /tmp/purge-out.txt || true
-          test "$code" = "200"
-          grep -q "Purge produits PROD terminee" /tmp/purge-out.txt
-          grep -q "Restants publish=0" /tmp/purge-out.txt
+          echo "::notice::Mu-plugin de purge depose sur pub.anrh.fr"
+          echo "Ouvrez https://pub.anrh.fr/ une fois dans le navigateur pour declencher la suppression de TOUS les produits."
+          echo "Le mu-plugin s auto-supprime apres execution. Staging non touche."
