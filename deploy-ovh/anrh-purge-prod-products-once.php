@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: ANRH Purge produits PROD (one-shot)
- * Description: Supprime tous les anr_product en production, puis s'auto-supprime. NE PAS laisser en place.
- * Version: 1.0.0
+ * Description: Supprime tous les anr_product en production via SQL, puis s'auto-supprime.
+ * Version: 1.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,41 +21,59 @@ add_action(
 			return;
 		}
 
-		// Évite une double exécution concurrente.
-		if ( get_transient( 'anrh_purge_products_lock' ) ) {
-			return;
-		}
-		set_transient( 'anrh_purge_products_lock', 1, 5 * MINUTE_IN_SECONDS );
+		@set_time_limit( 300 );
 
-		$ids = get_posts(
-			array(
-				'post_type'      => 'anr_product',
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-			)
+		global $wpdb;
+
+		// IDs des produits.
+		$ids = $wpdb->get_col(
+			"SELECT ID FROM {$wpdb->posts} WHERE post_type = 'anr_product'"
 		);
 
-		$count = 0;
-		foreach ( $ids as $id ) {
-			if ( wp_delete_post( (int) $id, true ) ) {
-				++$count;
-			}
+		$count = is_array( $ids ) ? count( $ids ) : 0;
+
+		if ( $count > 0 ) {
+			$id_list = implode( ',', array_map( 'intval', $ids ) );
+
+			// Meta.
+			$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE post_id IN ({$id_list})" ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+			// Termes.
+			$wpdb->query( "DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ({$id_list})" ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+			// Posts.
+			$wpdb->query( "DELETE FROM {$wpdb->posts} WHERE ID IN ({$id_list})" ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+			// Révisions / attachments enfants éventuels liés.
+			$wpdb->query(
+				"DELETE pm FROM {$wpdb->postmeta} pm
+				INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+				WHERE p.post_parent IN ({$id_list})"
+			); // phpcs:ignore WordPress.DB.PreparedSQL
+
+			$wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_parent IN ({$id_list})" ); // phpcs:ignore WordPress.DB.PreparedSQL
 		}
+
+		$remaining = (int) $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'anr_product'"
+		);
 
 		update_option(
 			'anrh_purge_products_last',
 			array(
-				'deleted' => $count,
-				'at'      => gmdate( 'c' ),
-				'host'    => $host,
+				'deleted'   => $count,
+				'remaining' => $remaining,
+				'at'        => gmdate( 'c' ),
+				'host'      => $host,
 			),
 			false
 		);
 
-		$self = __FILE__;
-		@unlink( $self );
+		wp_cache_flush();
+
+		if ( 0 === $remaining ) {
+			@unlink( __FILE__ );
+		}
 	},
-	1
+	0
 );
