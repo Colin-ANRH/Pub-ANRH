@@ -10,67 +10,57 @@ concurrency:
 jobs:
   deploy-full:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Préparer fichiers OVH
+      - name: Préparer wp-config + .htaccess staging
         env:
           OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
           STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
           STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
-          DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
           DEPLOY_ENV: staging
         run: |
           php deploy-ovh/build-wp-config.php
           cp deploy-ovh/.htaccess .htaccess
-          mkdir -p upload-bundle
-          # Inclure aussi le mu-plugin staging dans le zip (hors deploy-ovh/)
-          sed "s/CHANGE_ME/${DEPLOY_UNZIP_TOKEN}/" deploy-ovh/unzip-staging.php > upload-bundle/unzip-staging.php
 
-      - name: Créer l'archive deploy.zip
+      - name: Préparer le site complet (hors outils locaux)
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq zip
-          zip -r upload-bundle/deploy.zip . \
-            -x ".git/*" \
-            -x ".github/*" \
-            -x "deploy-ovh/*" \
-            -x "upload-bundle/*" \
-            -x "export*.sql" \
-            -x ".gitignore" \
-            -x "readme.html" \
-            -x "license.txt" \
-            -x "wp-content/updraft/*" \
-            -x "wp-content/upgrade/*" \
-            -x "wp-content/cache/*" \
-            -x "wp-content/themes/anrhpub_theme/node_modules/*" \
-            -x "wp-content/themes/anrhpub_theme/vendor/*" \
-            -x "wp-content/themes/anrhpub_theme/bin/*" \
-            -x "wp-content/themes/anrhpub_theme/tests/*"
-          ls -lh upload-bundle/
+          mkdir -p site-bundle
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='deploy-ovh/' \
+            --exclude='site-bundle/' \
+            --exclude='export*.sql' \
+            --exclude='.gitignore' \
+            --exclude='readme.html' \
+            --exclude='license.txt' \
+            --exclude='wp-content/updraft/' \
+            --exclude='wp-content/upgrade/' \
+            --exclude='wp-content/cache/' \
+            --exclude='wp-content/themes/anrhpub_theme/node_modules/' \
+            --exclude='wp-content/themes/anrhpub_theme/vendor/' \
+            --exclude='wp-content/themes/anrhpub_theme/bin/' \
+            --exclude='wp-content/themes/anrhpub_theme/tests/' \
+            --exclude='wp-content/themes/anrhpub_theme/tools/' \
+            ./ site-bundle/
+          # Vérifie le mu-plugin staging
+          test -f site-bundle/wp-content/mu-plugins/anrh-staging-gate.php
+          test -f site-bundle/wp-config.php
+          du -sh site-bundle
+          find site-bundle -type f | wc -l
 
-      - name: Publier deploy.zip (téléchargement GitHub)
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-staging-pub-zip
-          path: upload-bundle/deploy.zip
-          retention-days: 7
-
-      - name: Envoyer zip + unzip (FTP → staging-pub/)
+      - name: Déployer le site complet sur OVH (FTP → staging-pub/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.OVH_FTP_SERVER }}
           username: ${{ secrets.OVH_FTP_USERNAME }}
           password: ${{ secrets.OVH_FTP_PASSWORD }}
-          local-dir: upload-bundle/
+          local-dir: site-bundle/
           server-dir: staging-pub/
-          state-name: ovh-staging-pub-full
+          state-name: ovh-staging-pub-full-site
           log-level: standard
-
-      - name: Instructions décompression
-        run: |
-          echo "::notice::deploy.zip + unzip-staging.php ont été envoyés dans staging-pub/"
-          echo "Si le domaine staging n'est pas encore joignable en HTTP, extrayez deploy.zip manuellement via FileZilla dans staging-pub/."
-          echo "Puis ouvrez : https://VOTRE-DOMAINE-STAGING/unzip-staging.php?token=SECRET_DEPLOY_UNZIP_TOKEN"
+          timeout: 600000
