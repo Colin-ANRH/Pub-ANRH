@@ -45,6 +45,8 @@ jobs:
           php deploy-ovh/build-wp-config.php
           grep -q "define( 'WP_ENVIRONMENT_TYPE', 'staging' );" wp-config.php
           grep -q "define( 'ANRH_STAGING_GATE', true );" wp-config.php
+          grep -q "define( 'WP_HOME', 'https://staging-pub.anrh.fr' );" wp-config.php
+          grep -q "define( 'WP_SITEURL', 'https://staging-pub.anrh.fr' );" wp-config.php
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

@@ -1,6 +1,6 @@
 <?php
 /**
- * Template wp-config — staging OVH pub.anrh.fr
+ * Template wp-config — staging OVH staging-pub.anrh.fr
  * Utilisé par deploy-ovh/build-wp-config.php (GitHub Actions).
  */
 
@@ -25,6 +25,10 @@ $table_prefix = 'wp_';
 
 define( 'WP_DEBUG', false );
 define( 'WP_ENVIRONMENT_TYPE', 'staging' );
+
+// Force l'URL staging (ignore home/siteurl en base, partagée avec la prod).
+define( 'WP_HOME', 'https://staging-pub.anrh.fr' );
+define( 'WP_SITEURL', 'https://staging-pub.anrh.fr' );
 
 // Verrou staging — retirer à la mise en production.
 define( 'ANRH_STAGING_GATE', VOTRE_STAGING_GATE_ENABLED );

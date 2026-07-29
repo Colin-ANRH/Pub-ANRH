@@ -32,8 +32,8 @@ if (-not (Test-Path $tempDump)) {
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 $content = [System.IO.File]::ReadAllText($tempDump, $utf8NoBom)
 $content = $content `
-    -replace 'http://localhost:8080/ANRPUB', 'https://pub.anrh.fr' `
-    -replace 'http:\\/\\/localhost:8080\\/ANRPUB', 'https:\\/\\/pub.anrh.fr'
+    -replace 'http://localhost:8080/ANRPUB', 'https://staging-pub.anrh.fr' `
+    -replace 'http:\\/\\/localhost:8080\\/ANRPUB', 'https:\\/\\/staging-pub.anrh.fr'
 
 $header = @(
     "-- Export ANRHPUB staging pour OVH"

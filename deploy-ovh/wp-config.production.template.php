@@ -26,6 +26,10 @@ $table_prefix = 'wp_';
 define( 'WP_DEBUG', false );
 define( 'WP_ENVIRONMENT_TYPE', 'production' );
 
+// Force l'URL prod (ignore home/siteurl en base si partagée avec le staging).
+define( 'WP_HOME', 'https://pub.anrh.fr' );
+define( 'WP_SITEURL', 'https://pub.anrh.fr' );
+
 // Salesforce (espace client B2B) — secrets injectés au deploy ; chaînes vides = sync inactive.
 define( 'ANRHPUB_SF_CLIENT_ID', 'VOTRE_SF_CLIENT_ID' );
 define( 'ANRHPUB_SF_CLIENT_SECRET', 'VOTRE_SF_CLIENT_SECRET' );

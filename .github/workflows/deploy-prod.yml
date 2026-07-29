@@ -42,6 +42,8 @@ jobs:
         run: |
           php deploy-ovh/build-wp-config.php
           grep -q "define( 'WP_ENVIRONMENT_TYPE', 'production' );" wp-config.php
+          grep -q "define( 'WP_HOME', 'https://pub.anrh.fr' );" wp-config.php
+          grep -q "define( 'WP_SITEURL', 'https://pub.anrh.fr' );" wp-config.php
           if grep -q "ANRH_STAGING_GATE" wp-config.php; then
             echo "::error::ANRH_STAGING_GATE detecte en prod — template incorrect."
             exit 1

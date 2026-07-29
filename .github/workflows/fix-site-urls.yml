@@ -1,0 +1,93 @@
+name: Fix URLs — staging + prod wp-config
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fix-site-urls
+  cancel-in-progress: true
+
+jobs:
+  fix-staging-url:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Générer wp-config staging
+        env:
+          OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
+          STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
+          STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
+          DEPLOY_ENV: staging
+        run: |
+          php deploy-ovh/build-wp-config.php
+          grep -q "define( 'WP_HOME', 'https://staging-pub.anrh.fr' );" wp-config.php
+          grep -q "define( 'WP_SITEURL', 'https://staging-pub.anrh.fr' );" wp-config.php
+          mkdir -p fix-bundle
+          cp wp-config.php fix-bundle/
+
+      - name: Uploader wp-config staging → staging-pub/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: fix-bundle/
+          server-dir: staging-pub/
+          state-name: ovh-staging-pub-fix-urls
+          log-level: standard
+
+  fix-prod-url:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Générer wp-config production
+        env:
+          OVH_DB_PASSWORD_PROD: ${{ secrets.OVH_DB_PASSWORD_PROD }}
+          OVH_DB_PASSWORD_STAGING: ${{ secrets.OVH_DB_PASSWORD }}
+          DEPLOY_ENV: production
+        run: |
+          export OVH_DB_PASSWORD="${OVH_DB_PASSWORD_PROD:-$OVH_DB_PASSWORD_STAGING}"
+          php deploy-ovh/build-wp-config.php
+          grep -q "define( 'WP_HOME', 'https://pub.anrh.fr' );" wp-config.php
+          grep -q "define( 'WP_SITEURL', 'https://pub.anrh.fr' );" wp-config.php
+          mkdir -p fix-bundle
+          cp wp-config.php fix-bundle/
+
+      - name: Uploader wp-config prod → pub.anrh.fr/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: fix-bundle/
+          server-dir: pub.anrh.fr/
+          state-name: ovh-pub-anrh-fr-fix-urls
+          log-level: standard
+
+  smoke:
+    needs: [fix-staging-url, fix-prod-url]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verifier que staging ne renvoie plus vers prod
+        run: |
+          # Suit les redirects ; l'URL finale doit rester sur staging-pub
+          final=$(curl -sL -o /dev/null -w "%{url_effective}" --max-time 30 \
+            -A "ANRH-Deploy-SmokeTest/1.0" \
+            "https://staging-pub.anrh.fr/" || true)
+          echo "URL finale: $final"
+          case "$final" in
+            https://staging-pub.anrh.fr*|http://staging-pub.anrh.fr*)
+              echo "OK — staging reste sur staging-pub.anrh.fr"
+              ;;
+            *)
+              echo "::error::Redirect inattendu vers: $final"
+              exit 1
+              ;;
+          esac
