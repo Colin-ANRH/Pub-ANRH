@@ -5,8 +5,15 @@
  */
 
 $token_expected = 'CHANGE_ME';
+$token_given    = '';
 
-if ( ! isset( $_GET['token'] ) || ! hash_equals( $token_expected, (string) $_GET['token'] ) ) {
+if ( isset( $_POST['token'] ) ) {
+	$token_given = (string) $_POST['token'];
+} elseif ( isset( $_GET['token'] ) ) {
+	$token_given = (string) $_GET['token'];
+}
+
+if ( $token_given === '' || ! hash_equals( $token_expected, $token_given ) ) {
 	http_response_code( 403 );
 	header( 'Content-Type: text/plain; charset=utf-8' );
 	exit( "Forbidden\n" );

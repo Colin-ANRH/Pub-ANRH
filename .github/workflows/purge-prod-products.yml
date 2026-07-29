@@ -24,7 +24,15 @@ jobs:
             exit 1
           fi
           mkdir -p purge-bundle
-          sed "s/CHANGE_ME/${DEPLOY_UNZIP_TOKEN}/" deploy-ovh/purge-prod-products.php > purge-bundle/purge-prod-products.php
+          php -r '
+            $token = getenv("DEPLOY_UNZIP_TOKEN");
+            $src = file_get_contents("deploy-ovh/purge-prod-products.php");
+            if ($src === false) { fwrite(STDERR, "source missing\n"); exit(1); }
+            $out = str_replace("CHANGE_ME", $token, $src);
+            if (!is_dir("purge-bundle")) { mkdir("purge-bundle"); }
+            file_put_contents("purge-bundle/purge-prod-products.php", $out);
+            echo "script pret\n";
+          '
 
       - name: Uploader le script sur prod (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -41,9 +49,13 @@ jobs:
         env:
           DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
         run: |
-          URL="https://pub.anrh.fr/purge-prod-products.php?token=${DEPLOY_UNZIP_TOKEN}"
-          echo "Appel purge..."
-          body=$(curl -fsS --max-time 300 "$URL")
-          echo "$body"
-          echo "$body" | grep -q "Purge produits PROD terminee"
-          echo "$body" | grep -q "Restants publish=0"
+          echo "Appel purge (POST)..."
+          code=$(curl -sS -o /tmp/purge-out.txt -w "%{http_code}" --max-time 300 \
+            -X POST \
+            --data-urlencode "token=${DEPLOY_UNZIP_TOKEN}" \
+            "https://pub.anrh.fr/purge-prod-products.php" || echo "000")
+          echo "HTTP $code"
+          cat /tmp/purge-out.txt || true
+          test "$code" = "200"
+          grep -q "Purge produits PROD terminee" /tmp/purge-out.txt
+          grep -q "Restants publish=0" /tmp/purge-out.txt
