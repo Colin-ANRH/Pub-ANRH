@@ -1,12 +1,13 @@
 # Exporte la base locale XAMPP vers un fichier SQL prêt pour OVH staging.
 # Usage : .\deploy-ovh\export-staging-db.ps1
+# Importer le fichier généré dans phpMyAdmin → base anrservistgpub
 
 $ErrorActionPreference = 'Stop'
 
 $mysql   = 'C:\xampp\mysql\bin\mysqldump.exe'
 $dbLocal = 'anrhpub_db'
-$dbOvh   = 'anrservipubanrh'
-$out     = Join-Path (Split-Path $PSScriptRoot -Parent) 'export-pubanrh-ovh.sql'
+$dbOvh   = 'anrservistgpub'
+$out     = Join-Path (Split-Path $PSScriptRoot -Parent) 'export-staging-pub-ovh.sql'
 $tempDump = Join-Path $env:TEMP "anrhpub-dump-$(Get-Date -Format 'yyyyMMddHHmmss').sql"
 
 if (-not (Test-Path $mysql)) {
@@ -33,7 +34,9 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 $content = [System.IO.File]::ReadAllText($tempDump, $utf8NoBom)
 $content = $content `
     -replace 'http://localhost:8080/ANRPUB', 'https://staging-pub.anrh.fr' `
-    -replace 'http:\\/\\/localhost:8080\\/ANRPUB', 'https:\\/\\/staging-pub.anrh.fr'
+    -replace 'http:\\/\\/localhost:8080\\/ANRPUB', 'https:\\/\\/staging-pub.anrh.fr' `
+    -replace 'https://pub.anrh.fr', 'https://staging-pub.anrh.fr' `
+    -replace 'https:\\/\\/pub.anrh.fr', 'https:\\/\\/staging-pub.anrh.fr'
 
 $header = @(
     "-- Export ANRHPUB staging pour OVH"

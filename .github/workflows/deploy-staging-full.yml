@@ -18,12 +18,15 @@ jobs:
 
       - name: Préparer wp-config + .htaccess staging
         env:
-          OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD }}
+          OVH_DB_PASSWORD_STAGING: ${{ secrets.OVH_DB_PASSWORD_STAGING }}
+          OVH_DB_PASSWORD_FALLBACK: ${{ secrets.OVH_DB_PASSWORD }}
           STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
           STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
           DEPLOY_ENV: staging
         run: |
+          export OVH_DB_PASSWORD="${OVH_DB_PASSWORD_STAGING:-$OVH_DB_PASSWORD_FALLBACK}"
           php deploy-ovh/build-wp-config.php
+          grep -q "anrservistgpub" wp-config.php
           cp deploy-ovh/.htaccess .htaccess
 
       - name: Préparer le site complet (hors outils locaux)

@@ -4,10 +4,10 @@
  * Utilisé par deploy-ovh/build-wp-config.php (GitHub Actions).
  */
 
-define( 'DB_NAME', 'anrservipubanrh' );
-define( 'DB_USER', 'anrservipubanrh' );
+define( 'DB_NAME', 'anrservistgpub' );
+define( 'DB_USER', 'anrservistgpub' );
 define( 'DB_PASSWORD', 'VOTRE_MDP_OVH' );
-define( 'DB_HOST', 'anrservipubanrh.mysql.db' );
+define( 'DB_HOST', 'anrservistgpub.mysql.db' );
 
 define( 'DB_CHARSET', 'utf8mb4' );
 define( 'DB_COLLATE', '' );
@@ -26,7 +26,7 @@ $table_prefix = 'wp_';
 define( 'WP_DEBUG', false );
 define( 'WP_ENVIRONMENT_TYPE', 'staging' );
 
-// Force l'URL staging (ignore home/siteurl en base, partagée avec la prod).
+// URL staging (indépendante de la prod).
 define( 'WP_HOME', 'https://staging-pub.anrh.fr' );
 define( 'WP_SITEURL', 'https://staging-pub.anrh.fr' );
 
