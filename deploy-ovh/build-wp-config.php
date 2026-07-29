@@ -9,18 +9,32 @@ if ( $password === false || $password === '' ) {
 	exit( 1 );
 }
 
-$staging_user = getenv( 'STAGING_GATE_USER' );
-if ( $staging_user === false || $staging_user === '' ) {
-	$staging_user = 'anrh';
+// Staging vs production (défaut = staging).
+$deployEnv = getenv( 'DEPLOY_ENV' );
+if ( $deployEnv === false || $deployEnv === '' ) {
+	$deployEnv = 'staging';
 }
+$deployEnv = strtolower( (string) $deployEnv );
 
-$staging_password = getenv( 'STAGING_GATE_PASSWORD' );
-if ( $staging_password === false || $staging_password === '' ) {
-	fwrite( STDERR, "STAGING_GATE_PASSWORD manquant — deploy staging annule.\n" );
-	exit( 1 );
+$staging_user = '';
+$staging_password = '';
+$gate_enabled = 'false';
+
+// En prod, on ne veut pas (et on n'a pas besoin) des secrets de verrou staging.
+if ( $deployEnv === 'staging' ) {
+	$staging_user = getenv( 'STAGING_GATE_USER' );
+	if ( $staging_user === false || $staging_user === '' ) {
+		$staging_user = 'anrh';
+	}
+
+	$staging_password = getenv( 'STAGING_GATE_PASSWORD' );
+	if ( $staging_password === false || $staging_password === '' ) {
+		fwrite( STDERR, "STAGING_GATE_PASSWORD manquant — deploy staging annule.\n" );
+		exit( 1 );
+	}
+
+	$gate_enabled = 'true';
 }
-
-$gate_enabled = 'true';
 
 // Salesforce — optionnels ; chaînes vides = connexion désactivée.
 $sf_client_id     = getenv( 'SF_CLIENT_ID' );
@@ -45,9 +59,15 @@ if ( $sf_api_version === false || $sf_api_version === '' ) {
 	$sf_api_version = 'v59.0';
 }
 
-$template = file_get_contents( __DIR__ . '/wp-config.template.php' );
+// Choix du template selon l'environnement.
+$templatePath = __DIR__ . '/wp-config.template.php';
+if ( $deployEnv === 'production' ) {
+	$templatePath = __DIR__ . '/wp-config.production.template.php';
+}
+
+$template = file_get_contents( $templatePath );
 if ( $template === false ) {
-	fwrite( STDERR, "Template wp-config.template.php introuvable.\n" );
+	fwrite( STDERR, "Template wp-config introuvable ($templatePath).\n" );
 	exit( 1 );
 }
 
