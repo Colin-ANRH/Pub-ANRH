@@ -79,9 +79,17 @@ jobs:
 
       - name: Préparer le bundle de déploiement (prod)
         env:
-          OVH_DB_PASSWORD: ${{ secrets.OVH_DB_PASSWORD_PROD }}
+          OVH_DB_PASSWORD_PROD: ${{ secrets.OVH_DB_PASSWORD_PROD }}
+          OVH_DB_PASSWORD_STAGING: ${{ secrets.OVH_DB_PASSWORD }}
           DEPLOY_ENV: production
         run: |
+          # Prefere le secret prod ; sinon reutilise le MDP deja utilise sur pub.anrh.fr
+          export OVH_DB_PASSWORD="${OVH_DB_PASSWORD_PROD:-$OVH_DB_PASSWORD_STAGING}"
+          if [ -z "$OVH_DB_PASSWORD" ]; then
+            echo "::error::Aucun mot de passe DB (OVH_DB_PASSWORD_PROD ou OVH_DB_PASSWORD)"
+            exit 1
+          fi
+
           cd wp-content/themes/anrhpub_theme
           npm install
           npm run build || python bin/build-main-js.py
@@ -116,6 +124,10 @@ jobs:
           cp -r wp-content/uploads/* deploy-bundle/wp-content/uploads/ 2>/dev/null || true
           cp -r wp-content/plugins/* deploy-bundle/wp-content/plugins/
 
+          # Ne jamais embarquer le verrou staging en prod
+          rm -f deploy-bundle/wp-content/mu-plugins/anrh-staging-gate.php
+          rm -f deploy-bundle/staging-health.php
+
           echo "REMOTE_DIR=pub.anrh.fr/" >> $GITHUB_ENV
 
       - name: Déployer sur OVH (FTP - prod)
@@ -129,7 +141,25 @@ jobs:
           state-name: ovh-pub-anrh-fr-prod
           log-level: minimal
 
-      - name: Smoke test (assets theme)
+      - name: Retirer le verrou staging restant sur prod (FTP)
+        env:
+          FTP_SERVER: ${{ secrets.OVH_FTP_SERVER }}
+          FTP_USER: ${{ secrets.OVH_FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.OVH_FTP_PASSWORD }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp -c "
+            set ftp:ssl-allow true;
+            set ssl:verify-certificate no;
+            open -u ${FTP_USER},${FTP_PASS} ${FTP_SERVER};
+            cd pub.anrh.fr;
+            rm -f wp-content/mu-plugins/anrh-staging-gate.php;
+            rm -f staging-health.php;
+            rm -f unzip-staging.php;
+            bye
+          " || echo "::warning::Suppression FTP partielle — verifiez manuellement anrh-staging-gate.php"
+
+      - name: Smoke test (plus de gate staging)
         run: |
           code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 \
             -A "ANRH-Deploy-SmokeTest/1.0" \
@@ -137,7 +167,11 @@ jobs:
           echo "HTTP $code"
           case "$code" in
             200|301|302)
-              echo "Site accessible."
+              echo "Site accessible sans verrou staging."
+              ;;
+            401|403)
+              echo "::error::HTTP $code — le verrou staging est peut-etre encore actif"
+              exit 1
               ;;
             *)
               echo "::error::Site injoignable en prod (HTTP $code)"

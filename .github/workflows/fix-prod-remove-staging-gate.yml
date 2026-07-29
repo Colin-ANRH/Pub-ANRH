@@ -1,0 +1,85 @@
+name: Fix prod — retirer le verrou staging
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fix-prod-staging-gate
+  cancel-in-progress: true
+
+jobs:
+  remove-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Générer wp-config production
+        env:
+          OVH_DB_PASSWORD_PROD: ${{ secrets.OVH_DB_PASSWORD_PROD }}
+          OVH_DB_PASSWORD_STAGING: ${{ secrets.OVH_DB_PASSWORD }}
+          DEPLOY_ENV: production
+        run: |
+          export OVH_DB_PASSWORD="${OVH_DB_PASSWORD_PROD:-$OVH_DB_PASSWORD_STAGING}"
+          if [ -z "$OVH_DB_PASSWORD" ]; then
+            echo "::error::Aucun mot de passe DB"
+            exit 1
+          fi
+          php deploy-ovh/build-wp-config.php
+          grep -q "define( 'WP_ENVIRONMENT_TYPE', 'production' );" wp-config.php
+          if grep -q "ANRH_STAGING_GATE" wp-config.php; then
+            echo "::error::ANRH_STAGING_GATE encore present"
+            exit 1
+          fi
+          mkdir -p fix-bundle
+          cp wp-config.php fix-bundle/
+          cp deploy-ovh/htaccess.production.snippet fix-bundle/.htaccess
+
+      - name: Uploader wp-config + .htaccess prod
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: fix-bundle/
+          server-dir: pub.anrh.fr/
+          state-name: ovh-pub-anrh-fr-fix-gate
+          log-level: standard
+
+      - name: Supprimer le mu-plugin staging sur le FTP prod
+        env:
+          FTP_SERVER: ${{ secrets.OVH_FTP_SERVER }}
+          FTP_USER: ${{ secrets.OVH_FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.OVH_FTP_PASSWORD }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp -c "
+            set ftp:ssl-allow true;
+            set ssl:verify-certificate no;
+            open -u ${FTP_USER},${FTP_PASS} ${FTP_SERVER};
+            cd pub.anrh.fr;
+            rm -f wp-content/mu-plugins/anrh-staging-gate.php;
+            rm -f staging-health.php;
+            rm -f unzip-staging.php;
+            bye
+          "
+
+      - name: Verifier que la homepage n'exige plus le gate
+        run: |
+          code=$(curl -sL -o /tmp/pub-home.html -w "%{http_code}" --max-time 30 \
+            -A "ANRH-Deploy-SmokeTest/1.0" \
+            "https://pub.anrh.fr/" || echo "000")
+          echo "HTTP $code"
+          if grep -qi "Espace de prévisualisation\|anrh_staging_login\|Accès staging" /tmp/pub-home.html; then
+            echo "::error::Le formulaire de verrou staging est encore affiche"
+            exit 1
+          fi
+          case "$code" in
+            200|301|302)
+              echo "OK — plus de verrou staging visible."
+              ;;
+            *)
+              echo "::warning::HTTP $code — verifiez manuellement https://pub.anrh.fr/"
+              ;;
+          esac
