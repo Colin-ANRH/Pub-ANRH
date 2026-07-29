@@ -15,12 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Préparer mu-plugin one-shot
+      - name: Préparer script
         run: |
-          mkdir -p purge-bundle/wp-content/mu-plugins
-          cp deploy-ovh/anrh-purge-prod-products-once.php purge-bundle/wp-content/mu-plugins/
+          mkdir -p purge-bundle
+          cp deploy-ovh/purge-prod-products.php purge-bundle/
 
-      - name: Uploader mu-plugin sur prod (FTP)
+      - name: Uploader script sur prod (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.OVH_FTP_SERVER }}
@@ -28,11 +28,11 @@ jobs:
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: purge-bundle/
           server-dir: pub.anrh.fr/
-          state-name: ovh-pub-anrh-fr-purge-products-mu
+          state-name: ovh-pub-anrh-fr-purge-products-v3
           log-level: standard
 
       - name: Instructions
         run: |
-          echo "::notice::Mu-plugin de purge depose sur pub.anrh.fr"
-          echo "Ouvrez https://pub.anrh.fr/ une fois dans le navigateur pour declencher la suppression de TOUS les produits."
-          echo "Le mu-plugin s auto-supprime apres execution. Staging non touche."
+          echo "::notice::Ouvrez cette URL une seule fois pour purger la PROD :"
+          echo "https://pub.anrh.fr/purge-prod-products.php?token=purge-anrh-20260729"
+          echo "Staging non touche. Le script s auto-supprime."
