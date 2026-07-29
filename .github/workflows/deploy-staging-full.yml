@@ -10,7 +10,7 @@ concurrency:
 jobs:
   deploy-full:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -22,10 +22,12 @@ jobs:
           STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
           STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
           DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
+          DEPLOY_ENV: staging
         run: |
           php deploy-ovh/build-wp-config.php
           cp deploy-ovh/.htaccess .htaccess
           mkdir -p upload-bundle
+          # Inclure aussi le mu-plugin staging dans le zip (hors deploy-ovh/)
           sed "s/CHANGE_ME/${DEPLOY_UNZIP_TOKEN}/" deploy-ovh/unzip-staging.php > upload-bundle/unzip-staging.php
 
       - name: Créer l'archive deploy.zip
@@ -42,35 +44,33 @@ jobs:
             -x "license.txt" \
             -x "wp-content/updraft/*" \
             -x "wp-content/upgrade/*" \
-            -x "wp-content/cache/*"
+            -x "wp-content/cache/*" \
+            -x "wp-content/themes/anrhpub_theme/node_modules/*" \
+            -x "wp-content/themes/anrhpub_theme/vendor/*" \
+            -x "wp-content/themes/anrhpub_theme/bin/*" \
+            -x "wp-content/themes/anrhpub_theme/tests/*"
           ls -lh upload-bundle/
 
       - name: Publier deploy.zip (téléchargement GitHub)
         uses: actions/upload-artifact@v4
         with:
-          name: deploy-pub-anrh-zip
+          name: deploy-staging-pub-zip
           path: upload-bundle/deploy.zip
           retention-days: 7
 
-      - name: Envoyer zip + unzip (FTP)
+      - name: Envoyer zip + unzip (FTP → staging-pub/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.OVH_FTP_SERVER }}
           username: ${{ secrets.OVH_FTP_USERNAME }}
           password: ${{ secrets.OVH_FTP_PASSWORD }}
           local-dir: upload-bundle/
-          server-dir: pub.anrh.fr/
-          state-name: ovh-pub-anrh-fr-full
+          server-dir: staging-pub/
+          state-name: ovh-staging-pub-full
           log-level: standard
 
-      - name: Décompresser sur le serveur
-        env:
-          DEPLOY_UNZIP_TOKEN: ${{ secrets.DEPLOY_UNZIP_TOKEN }}
+      - name: Instructions décompression
         run: |
-          for URL in "https://pub.anrh.fr/unzip-staging.php" "https://www.pub.anrh.fr/unzip-staging.php"; do
-            if curl -fsS "${URL}?token=${DEPLOY_UNZIP_TOKEN}"; then
-              echo "Decompression OK via ${URL}"
-              exit 0
-            fi
-          done
-          echo "::warning::Decompression HTTP impossible. Extrayez deploy.zip manuellement via FTP/FileZilla dans pub.anrh.fr/"
+          echo "::notice::deploy.zip + unzip-staging.php ont été envoyés dans staging-pub/"
+          echo "Si le domaine staging n'est pas encore joignable en HTTP, extrayez deploy.zip manuellement via FileZilla dans staging-pub/."
+          echo "Puis ouvrez : https://VOTRE-DOMAINE-STAGING/unzip-staging.php?token=SECRET_DEPLOY_UNZIP_TOKEN"
