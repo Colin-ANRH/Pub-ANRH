@@ -24,11 +24,19 @@ define( 'NONCE_SALT',       ',6jMsYvCv<zN$pAZo0 ay+LXK)sfNx?f(lni~[Zk<0PNh*fAa8R
 $table_prefix = 'wp_';
 
 define( 'WP_DEBUG', false );
+define( 'WP_DEBUG_DISPLAY', false );
+define( 'WP_DEBUG_LOG', false );
 define( 'WP_ENVIRONMENT_TYPE', 'staging' );
 
 // URL staging (indépendante de la prod).
 define( 'WP_HOME', 'https://staging-pub.anrh.fr' );
 define( 'WP_SITEURL', 'https://staging-pub.anrh.fr' );
+
+// Durcissement staging.
+define( 'FORCE_SSL_ADMIN', true );
+define( 'DISALLOW_FILE_EDIT', true );
+define( 'AUTOMATIC_UPDATER_DISABLED', true );
+define( 'WP_AUTO_UPDATE_CORE', false );
 
 // Verrou staging — retirer à la mise en production.
 define( 'ANRH_STAGING_GATE', VOTRE_STAGING_GATE_ENABLED );

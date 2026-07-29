@@ -503,7 +503,11 @@ add_filter( 'wp_sitemaps_enabled', 'anrhpub_seo_disable_sitemaps_on_staging', 99
  * @return string
  */
 function anrhpub_seo_robots_txt( $output, $public ) {
-	if ( anrhpub_is_staging_environment() || ! $public ) {
+	if ( anrhpub_is_staging_environment() ) {
+		return "User-agent: *\nDisallow: /\n";
+	}
+
+	if ( ! $public ) {
 		return $output;
 	}
 

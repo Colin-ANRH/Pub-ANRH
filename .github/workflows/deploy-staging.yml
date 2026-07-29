@@ -111,12 +111,18 @@ jobs:
 
           # .htaccess staging : noindex + HTTPS
           cp deploy-ovh/.htaccess deploy-bundle/.htaccess
+          cp deploy-ovh/robots.staging.txt deploy-bundle/robots.txt
           cp deploy-ovh/staging-health.php deploy-bundle/staging-health.php
 
           cp *.php deploy-bundle/
 
           # Verrou staging (absent en prod)
           cp wp-content/mu-plugins/anrh-staging-gate.php deploy-bundle/wp-content/mu-plugins/
+          # Ne jamais déployer le durcissement prod sur staging
+          rm -f deploy-bundle/wp-content/mu-plugins/anrh-production-hardening.php
+          rm -f deploy-bundle/wp-content/mu-plugins/anrh-purge-prod-products-once.php
+          rm -f deploy-bundle/purge-prod-products.php
+          rm -f deploy-bundle/unzip-staging.php
 
           cp wp-content/themes/index.php deploy-bundle/wp-content/themes/ 2>/dev/null || true
 

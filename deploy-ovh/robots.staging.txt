@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# Staging ANRH Publications — ne pas indexer.

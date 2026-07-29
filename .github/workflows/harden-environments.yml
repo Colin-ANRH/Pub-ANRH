@@ -1,0 +1,127 @@
+name: Harden staging + prod environments
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: harden-environments
+  cancel-in-progress: true
+
+jobs:
+  harden-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Préparer bundle staging
+        env:
+          OVH_DB_PASSWORD_STAGING: ${{ secrets.OVH_DB_PASSWORD_STAGING }}
+          OVH_DB_PASSWORD_FALLBACK: ${{ secrets.OVH_DB_PASSWORD }}
+          STAGING_GATE_USER: ${{ secrets.STAGING_GATE_USER }}
+          STAGING_GATE_PASSWORD: ${{ secrets.STAGING_GATE_PASSWORD }}
+          DEPLOY_ENV: staging
+        run: |
+          export OVH_DB_PASSWORD="${OVH_DB_PASSWORD_STAGING:-$OVH_DB_PASSWORD_FALLBACK}"
+          php deploy-ovh/build-wp-config.php
+          grep -q "anrservistgpub" wp-config.php
+          grep -q "WP_ENVIRONMENT_TYPE', 'staging'" wp-config.php
+          mkdir -p harden-bundle/wp-content/mu-plugins
+          cp wp-config.php harden-bundle/
+          cp deploy-ovh/.htaccess harden-bundle/.htaccess
+          cp deploy-ovh/robots.staging.txt harden-bundle/robots.txt
+          cp wp-content/mu-plugins/anrh-staging-gate.php harden-bundle/wp-content/mu-plugins/
+          cp deploy-ovh/staging-health.php harden-bundle/staging-health.php
+
+      - name: Déployer config staging → staging-pub/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: harden-bundle/
+          server-dir: staging-pub/
+          state-name: ovh-staging-pub-harden
+          log-level: standard
+
+  harden-prod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Préparer bundle prod
+        env:
+          OVH_DB_PASSWORD_PROD: ${{ secrets.OVH_DB_PASSWORD_PROD }}
+          OVH_DB_PASSWORD_STAGING: ${{ secrets.OVH_DB_PASSWORD }}
+          DEPLOY_ENV: production
+        run: |
+          export OVH_DB_PASSWORD="${OVH_DB_PASSWORD_PROD:-$OVH_DB_PASSWORD_STAGING}"
+          php deploy-ovh/build-wp-config.php
+          grep -q "WP_ENVIRONMENT_TYPE', 'production'" wp-config.php
+          grep -q "pub.anrh.fr" wp-config.php
+          if grep -q "ANRH_STAGING_GATE" wp-config.php; then
+            echo "::error::ANRH_STAGING_GATE present en prod"
+            exit 1
+          fi
+          mkdir -p harden-bundle/wp-content/mu-plugins
+          cp wp-config.php harden-bundle/
+          cp deploy-ovh/htaccess.production.snippet harden-bundle/.htaccess
+          cp wp-content/mu-plugins/anrh-production-hardening.php harden-bundle/wp-content/mu-plugins/
+
+      - name: Déployer config prod → pub.anrh.fr/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.OVH_FTP_SERVER }}
+          username: ${{ secrets.OVH_FTP_USERNAME }}
+          password: ${{ secrets.OVH_FTP_PASSWORD }}
+          local-dir: harden-bundle/
+          server-dir: pub.anrh.fr/
+          state-name: ovh-pub-anrh-fr-harden
+          log-level: standard
+
+      - name: Nettoyer restes staging sur prod
+        env:
+          FTP_SERVER: ${{ secrets.OVH_FTP_SERVER }}
+          FTP_USER: ${{ secrets.OVH_FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.OVH_FTP_PASSWORD }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp -c "
+            set ftp:ssl-allow true;
+            set ssl:verify-certificate no;
+            open -u ${FTP_USER},${FTP_PASS} ${FTP_SERVER};
+            cd pub.anrh.fr;
+            rm -f wp-content/mu-plugins/anrh-staging-gate.php;
+            rm -f wp-content/mu-plugins/anrh-purge-prod-products-once.php;
+            rm -f staging-health.php;
+            rm -f unzip-staging.php;
+            rm -f purge-prod-products.php;
+            rm -f robots.txt;
+            bye
+          "
+
+  smoke:
+    needs: [harden-staging, harden-prod]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Vérifier robots staging
+        run: |
+          body=$(curl -fsS --max-time 30 "https://staging-pub.anrh.fr/robots.txt" || true)
+          echo "$body"
+          echo "$body" | grep -qi "Disallow: /"
+
+      - name: Vérifier prod accessible
+        run: |
+          code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 \
+            -A "ANRH-Harden-Smoke/1.0" \
+            "https://pub.anrh.fr/" || echo "000")
+          echo "HTTP $code"
+          case "$code" in
+            200|301|302) echo "OK prod" ;;
+            401|403) echo "::warning::HTTP $code (blocage IP GitHub possible)" ;;
+            *) echo "::error::Prod HTTP $code"; exit 1 ;;
+          esac

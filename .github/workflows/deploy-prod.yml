@@ -100,6 +100,7 @@ jobs:
           php deploy-ovh/build-wp-config.php
 
           mkdir -p deploy-bundle/wp-content/themes
+          mkdir -p deploy-bundle/wp-content/mu-plugins
           mkdir -p deploy-bundle/wp-content/uploads
           mkdir -p deploy-bundle/wp-content/plugins
 
@@ -109,6 +110,9 @@ jobs:
           cp deploy-ovh/htaccess.production.snippet deploy-bundle/.htaccess
 
           cp *.php deploy-bundle/
+
+          # Durcissement production
+          cp wp-content/mu-plugins/anrh-production-hardening.php deploy-bundle/wp-content/mu-plugins/
 
           cp wp-content/themes/index.php deploy-bundle/wp-content/themes/ 2>/dev/null || true
 
@@ -126,9 +130,13 @@ jobs:
           cp -r wp-content/uploads/* deploy-bundle/wp-content/uploads/ 2>/dev/null || true
           cp -r wp-content/plugins/* deploy-bundle/wp-content/plugins/
 
-          # Ne jamais embarquer le verrou staging en prod
+          # Ne jamais embarquer le verrou / outils staging en prod
           rm -f deploy-bundle/wp-content/mu-plugins/anrh-staging-gate.php
+          rm -f deploy-bundle/wp-content/mu-plugins/anrh-purge-prod-products-once.php
           rm -f deploy-bundle/staging-health.php
+          rm -f deploy-bundle/unzip-staging.php
+          rm -f deploy-bundle/purge-prod-products.php
+          rm -f deploy-bundle/robots.txt
 
           echo "REMOTE_DIR=pub.anrh.fr/" >> $GITHUB_ENV
 
@@ -156,8 +164,11 @@ jobs:
             open -u ${FTP_USER},${FTP_PASS} ${FTP_SERVER};
             cd pub.anrh.fr;
             rm -f wp-content/mu-plugins/anrh-staging-gate.php;
+            rm -f wp-content/mu-plugins/anrh-purge-prod-products-once.php;
             rm -f staging-health.php;
             rm -f unzip-staging.php;
+            rm -f purge-prod-products.php;
+            rm -f robots.txt;
             bye
           " || echo "::warning::Suppression FTP partielle — verifiez manuellement anrh-staging-gate.php"
 

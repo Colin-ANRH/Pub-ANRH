@@ -28,6 +28,46 @@ if ( ! defined( 'ANRH_STAGING_USER' ) || ! defined( 'ANRH_STAGING_PASSWORD' ) ||
 }
 
 /**
+ * Bannière admin STAGING.
+ */
+add_action(
+	'admin_bar_menu',
+	static function ( $wp_admin_bar ) {
+		if ( ! is_admin_bar_showing() ) {
+			return;
+		}
+		$wp_admin_bar->add_node(
+			array(
+				'id'    => 'anrh-staging-env',
+				'title' => 'STAGING',
+				'href'  => home_url( '/' ),
+				'meta'  => array(
+					'title' => 'Environnement de prévisualisation — non public',
+				),
+			)
+		);
+	},
+	1
+);
+
+add_action(
+	'admin_head',
+	static function () {
+		echo '<style>#wp-admin-bar-anrh-staging-env>.ab-item{background:#814a79!important;color:#fff!important;font-weight:700!important;}</style>';
+	}
+);
+
+add_action(
+	'wp_head',
+	static function () {
+		if ( ! is_admin_bar_showing() ) {
+			return;
+		}
+		echo '<style>#wp-admin-bar-anrh-staging-env>.ab-item{background:#814a79!important;color:#fff!important;font-weight:700!important;}</style>';
+	}
+);
+
+/**
  * Bloque l'indexation (SEO) sur le staging.
  */
 add_filter(
